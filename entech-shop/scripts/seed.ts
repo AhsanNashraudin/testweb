@@ -1,5 +1,6 @@
 /* ข้อมูลตั้งต้น: สินค้าจาก scripts/catalog.ts (ราคาจาก Price List), โซนค่าส่งจากชีต Delivery Fee */
 import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 import { db, schema as s } from '../src/db';
 import { CATS, PRODUCTS, type P } from './catalog';
 import { ARTICLES } from './articles';
@@ -35,6 +36,23 @@ async function insertArticles() {
   return rows.length;
 }
 
+// ตั้ง ADMIN_PASSWORD ใหม่แล้วรัน seed ซ้ำ (เช่น redeploy) = รีเซ็ตรหัสผ่านแอดมินคนนี้ได้ โดยไม่แตะข้อมูลอื่น
+async function syncAdmin() {
+  const explicitPassword = process.env.ADMIN_PASSWORD?.trim();
+  if (!explicitPassword) return; // ไม่ได้ตั้งมา = ไม่ยุ่งกับรหัสผ่านที่มีอยู่
+  if (explicitPassword.length < 8) throw new Error('ADMIN_PASSWORD ต้องยาวอย่างน้อย 8 ตัวอักษร');
+  const email = process.env.ADMIN_EMAIL?.trim() || 'admin@entech.local';
+  const passwordHash = await bcrypt.hash(explicitPassword, 10);
+  const [existingAdmin] = await db.select().from(s.admins).where(eq(s.admins.email, email));
+  if (existingAdmin) {
+    await db.update(s.admins).set({ passwordHash }).where(eq(s.admins.email, email));
+    console.log(`✓ รีเซ็ตรหัสผ่านแอดมิน: ${email}`);
+  } else {
+    await db.insert(s.admins).values({ email, name: 'ผู้ดูแลระบบ', passwordHash });
+    console.log(`✓ สร้างแอดมินใหม่: ${email}`);
+  }
+}
+
 async function main() {
   const existing = await db.select().from(s.categories);
   if (existing.length) {
@@ -44,6 +62,7 @@ async function main() {
     const added = await insertProducts(PRODUCTS.filter((p) => !have.has(p.slug)), catId);
     const arts = await insertArticles();
     if (arts) console.log(`✓ เพิ่มบทความ ${arts} เรื่อง`);
+    await syncAdmin();
     return console.log(added ? `✓ เพิ่มสินค้าใหม่ ${added} รายการ (ข้อมูลเดิมไม่เปลี่ยน)` : '↷ มีข้อมูลครบแล้ว (ใช้ npm run db:reset เพื่อล้างใหม่)');
   }
   const catId: Record<string, number> = {};
@@ -71,11 +90,15 @@ async function main() {
     { key: 'bank_name', value: '' }, { key: 'bank_account', value: '' }, { key: 'bank_holder', value: '' },
   ]);
   await db.insert(s.coupons).values([{ code: 'ENTECH500', type: 'fixed', value: 500, minSubtotal: 5000 }]);
-  const email = process.env.ADMIN_EMAIL?.trim() || 'admin@entech.local';
-  const password = process.env.ADMIN_PASSWORD?.trim() || 'Entech@2026';
-  if (password.length < 8) throw new Error('ADMIN_PASSWORD ต้องยาวอย่างน้อย 8 ตัวอักษร');
   if (process.env.VERCEL && !process.env.ADMIN_PASSWORD) throw new Error('บน Vercel ต้องตั้ง ADMIN_PASSWORD (ห้ามใช้รหัสเริ่มต้น)');
-  await db.insert(s.admins).values({ email, name: 'ผู้ดูแลระบบ', passwordHash: await bcrypt.hash(password, 10) });
-  console.log(`✓ seed เสร็จ — แอดมิน: ${email} / ${process.env.ADMIN_PASSWORD ? '(จาก ADMIN_PASSWORD)' : password + '  ← เปลี่ยนทันทีบน production'}`);
+  if (!process.env.ADMIN_PASSWORD) {
+    // dev เท่านั้น: ไม่ได้ตั้ง ADMIN_PASSWORD มา ใช้รหัสเริ่มต้น (syncAdmin ข้ามเคสนี้เพราะต้องมี ADMIN_PASSWORD ชัดเจน)
+    const email = process.env.ADMIN_EMAIL?.trim() || 'admin@entech.local';
+    await db.insert(s.admins).values({ email, name: 'ผู้ดูแลระบบ', passwordHash: await bcrypt.hash('Entech@2026', 10) });
+    console.log(`✓ seed เสร็จ — แอดมิน: ${email} / Entech@2026  ← เปลี่ยนทันทีบน production`);
+    return;
+  }
+  await syncAdmin();
+  console.log('✓ seed เสร็จ');
 }
 main().catch((e) => { console.error(e); process.exit(1); });
