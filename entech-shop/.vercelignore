@@ -1,0 +1,11 @@
+node_modules
+.next
+data
+test-results
+playwright-report
+assets
+tests
+docs
+*.tsbuildinfo
+.env
+deploy-vercel.ps1
