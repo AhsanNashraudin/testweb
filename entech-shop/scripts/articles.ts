@@ -30,7 +30,7 @@ export const ARTICLES: SeedArticle[] = [
 ต้องการให้ทีมงานช่วยคำนวณขนาด ส่งจำนวนผู้ใช้และรูปพื้นที่มาทาง LINE @entechproducts หรือกรอกแบบฟอร์มขอใบเสนอราคาได้เลย`,
   },
   {
-    slug: 'grease-trap-size-guide',
+    slug: 'grease-trap-size-guide', image: '/images/articles/grease-trap-size-guide.jpg',
     title: 'ถังดักไขมันร้านอาหาร เลือกขนาดตามจำนวนโต๊ะ',
     excerpt: 'เทียบขนาดถังดักไขมัน PT-15 ถึง PT-140 กับจำนวนโต๊ะอาหาร พร้อมความต่างของแบบใต้ซิงค์และแบบฝังดิน',
     publishedAt: '2026-10-01',
@@ -53,7 +53,7 @@ PT-140 | 21–40 โต๊ะ | 56 × 98 | 50
 ร้านที่มีมากกว่า 40 โต๊ะ หรือเป็นครัวกลาง ทีมงานออกแบบถังดักไขมันไฟเบอร์กลาสตามขนาดได้ ขอใบเสนอราคาได้ที่หน้าบริการ`,
   },
   {
-    slug: 'water-tank-donation-ban-sap-duea-school', kind: 'csr',
+    slug: 'water-tank-donation-ban-sap-duea-school', image: '/images/articles/water-tank-donation-ban-sap-duea-school.jpg', kind: 'csr',
     title: 'มอบถังเก็บน้ำให้โรงเรียนบ้านซับเดื่อ จ.เพชรบูรณ์',
     excerpt: 'ENTECH มอบถังเก็บน้ำให้โรงเรียนบ้านซับเดื่อ ต.บ้านโภชน์ อ.หนองไผ่ จ.เพชรบูรณ์ เพื่อใช้ในกิจการของโรงเรียน',
     publishedAt: '2022-01-03',
@@ -62,7 +62,7 @@ PT-140 | 21–40 โต๊ะ | 56 × 98 | 50
 กิจกรรมนี้เป็นส่วนหนึ่งของความตั้งใจของบริษัทในการสนับสนุนสถานศึกษาในต่างจังหวัดให้มีน้ำใช้อย่างเพียงพอ`,
   },
   {
-    slug: 'entech-for-community-water-tank-donation', kind: 'csr',
+    slug: 'entech-for-community-water-tank-donation', image: '/images/articles/entech-for-community-water-tank-donation.jpg', kind: 'csr',
     title: 'โครงการ Entech เพื่อชุมชน: บริจาคถังเก็บน้ำให้วัดและโรงเรียนในชนบท',
     excerpt: 'บริจาคถังเก็บน้ำให้โรงเรียนตำรวจตระเวน จ.กาญจนบุรี และวัดในชนบท ช่วยรับมือภัยแล้ง',
     publishedAt: '2019-01-07',
@@ -73,7 +73,7 @@ PT-140 | 21–40 โต๊ะ | 56 × 98 | 50
 โครงการนี้มีเป้าหมายต่อเนื่องในการช่วยปรับปรุงระบบน้ำสะอาด โดยนำน้ำจากบ่อบาดาลขึ้นมาเก็บในถังเพื่อใช้งาน`,
   },
   {
-    slug: 'fiberglass-doors-for-temples-schools-army', kind: 'csr',
+    slug: 'fiberglass-doors-for-temples-schools-army', image: '/images/articles/fiberglass-doors-for-temples-schools-army.jpg', kind: 'csr',
     title: 'มอบประตูไฟเบอร์กลาสให้วัด โรงเรียน และหน่วยงานกองทัพภาคที่ 1',
     excerpt: 'ENTECH จัดทำประตูไฟเบอร์กลาสให้วัด โรงเรียน และหน่วยงานกองทัพบกภาคที่ 1 ในต่างจังหวัด',
     publishedAt: '2019-01-07',
@@ -82,7 +82,7 @@ PT-140 | 21–40 โต๊ะ | 56 × 98 | 50
 บริษัทมีนโยบายสนับสนุนพระพุทธศาสนา การศึกษา และหน่วยงานด้านความมั่นคง และเลือกมอบประตูไฟเบอร์กลาสเพราะทนความชื้น ไม่ผุ ไม่บวม และใช้งานได้ยาวนาน เหมาะกับอาคารที่ใช้งานหนัก`,
   },
   {
-    slug: 'learning-materials-nakhon-ratchasima-schools', kind: 'csr',
+    slug: 'learning-materials-nakhon-ratchasima-schools', image: '/images/articles/learning-materials-nakhon-ratchasima-schools.jpg', kind: 'csr',
     title: 'มอบสื่อการเรียนการสอนและอุปกรณ์คอมพิวเตอร์ให้โรงเรียนใน จ.นครราชสีมา',
     excerpt: 'สนับสนุนสื่อการเรียนรู้และอุปกรณ์คอมพิวเตอร์ให้โรงเรียนในพื้นที่ห่างไกล จ.นครราชสีมา',
     publishedAt: '2019-01-07',
