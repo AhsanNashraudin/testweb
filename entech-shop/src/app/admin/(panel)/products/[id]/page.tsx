@@ -3,20 +3,24 @@ import { asc, eq } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { saveProduct } from '../../actions';
+import { ImagePicker } from '@/components/image-picker';
 
 export const metadata = { title: 'แก้ไขสินค้า' };
 
 export default async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
-  const [p] = await db.select().from(s.products).where(eq(s.products.id, id));
+  const [[p], vs] = await Promise.all([
+    db.select().from(s.products).where(eq(s.products.id, id)),
+    db.select().from(s.variants).where(eq(s.variants.productId, id)).orderBy(asc(s.variants.sort)),
+  ]);
   if (!p) notFound();
-  const vs = await db.select().from(s.variants).where(eq(s.variants.productId, id)).orderBy(asc(s.variants.sort));
   return (
     <ActionForm action={saveProduct} className="max-w-4xl space-y-5">
       <input type="hidden" name="id" value={p.id} />
       <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between gap-3 bg-slate-100/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8"><h1 className="min-w-0 truncate text-2xl font-bold">แก้ไข: {p.name}</h1><SubmitButton>บันทึก</SubmitButton></div>
-      <section className="card grid gap-4 p-5">
+      <section className="card grid gap-4 p-5 md:grid-cols-[260px_1fr]">
+        <div className="md:row-span-4"><ImagePicker name="image" value={p.image} label="รูปสินค้า" aspect="aspect-square" max={1200} hint="แนะนำรูปสี่เหลี่ยมจัตุรัส พื้นหลังขาว" /></div>
         <div><label className="label" htmlFor="name">ชื่อสินค้า</label><input id="name" name="name" defaultValue={p.name} className="input" required /></div>
         <div><label className="label" htmlFor="shortDesc">คำโปรย</label><input id="shortDesc" name="shortDesc" defaultValue={p.shortDesc} className="input" /></div>
         <div><label className="label" htmlFor="description">รายละเอียด</label><textarea id="description" name="description" defaultValue={p.description} rows={5} className="input" /></div>

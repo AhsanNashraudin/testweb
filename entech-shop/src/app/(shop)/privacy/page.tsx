@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/legal';
-import { CONTACT } from '@/components/site';
+import { getContact } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'นโยบายความเป็นส่วนตัว',
@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
 };
 
-export default function Privacy() {
+export default async function Privacy() {
+  const CONTACT = await getContact();
   return (
     <LegalPage title="นโยบายความเป็นส่วนตัว" updated="10 ตุลาคม 2569"
       intro={`${CONTACT.company} ("บริษัท") ในฐานะผู้ควบคุมข้อมูลส่วนบุคคล ให้ความสำคัญกับการคุ้มครองข้อมูลของท่านตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 นโยบายนี้อธิบายว่าเว็บไซต์เก็บข้อมูลอะไร ใช้ทำอะไร และท่านมีสิทธิอะไรบ้าง`}

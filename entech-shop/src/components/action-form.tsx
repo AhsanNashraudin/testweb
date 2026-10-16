@@ -7,14 +7,15 @@ const Pending = createContext(false);
 
 /** ฟอร์มหลังบ้าน: ส่งแบบไม่รีเฟรช, ค่าที่กรอกไม่หายเมื่อผิดพลาด, แสดงผลลัพธ์ใกล้ฟอร์ม, กันกดซ้ำ
  *  confirm: ถามยืนยันก่อนส่งเมื่อช่อง field มีค่า value (เช่น เปลี่ยนสถานะเป็น "ยกเลิก") */
-export function ActionForm({ action, children, className, resetOnSuccess, confirm: ask, ...rest }: {
-  action: Action; children: React.ReactNode; className?: string; resetOnSuccess?: boolean;
+export function ActionForm({ action, children, className, resetOnSuccess, onSuccess, confirm: ask, ...rest }: {
+  action: Action; children: React.ReactNode; className?: string; resetOnSuccess?: boolean; onSuccess?: () => void;
   confirm?: { field: string; value: string; message: string };
 } & Omit<React.ComponentProps<'form'>, 'action' | 'onSubmit'>) {
   const ref = useRef<HTMLFormElement>(null);
   const [state, run, pending] = useActionState<ActionResult, FormData>(async (prev, fd) => {
     const r = await action(prev, fd);
     if (r?.ok && resetOnSuccess) ref.current?.reset();
+    if (r?.ok) onSuccess?.();
     return r && { ...r, t: Date.now() };
   }, null);
   return (

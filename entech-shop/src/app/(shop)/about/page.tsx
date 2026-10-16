@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CONTACT } from '@/components/site';
+import { getContact } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'เกี่ยวกับเรา',
@@ -26,7 +26,8 @@ const SERVICES = [
   'ให้คำปรึกษาและออกแบบงานไฟเบอร์กลาส',
 ];
 
-export default function About() {
+export default async function About() {
+  const CONTACT = await getContact();
   return (
     <div className="container-x space-y-14 py-10">
       <div className="grid items-center gap-10 md:grid-cols-2">
@@ -80,7 +81,7 @@ export default function About() {
 
       <section className="card grid gap-2 p-6 md:grid-cols-2">
         <div><p className="font-bold">ที่ตั้งโรงงานและสำนักงาน</p><p className="text-sm text-muted">{CONTACT.address}</p></div>
-        <div className="text-sm"><p>โทร {CONTACT.phone}, {CONTACT.mobile}</p><p>เวลาทำการ {CONTACT.hours}</p><p>เลขทะเบียนนิติบุคคล {CONTACT.regNo}</p></div>
+        <div className="text-sm"><p>โทร: {CONTACT.phone}, {CONTACT.mobile}</p><p>เวลาทำการ: {CONTACT.hours}</p><p>เลขทะเบียนนิติบุคคล: {CONTACT.regNo}</p></div>
       </section>
     </div>
   );

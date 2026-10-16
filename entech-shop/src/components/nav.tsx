@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { LineIcon } from '@/components/line-icon';
 
 export type NavItem = { href: string; label: string };
 const isActive = (path: string, href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
@@ -47,6 +48,7 @@ export function DesktopNav({ cats }: { cats: NavItem[] }) {
         </details>
         <L href="/services" label="บริการออกแบบระบบ" />
         <L href="/articles" label="บทความ" />
+        <L href="/csr" label="กิจกรรม CSR" />
         <L href="/about" label="เกี่ยวกับเรา" />
         <L href="/contact" label="ติดต่อเรา" />
         <Link href="/services#quote" className="ml-auto whitespace-nowrap rounded-md bg-white px-4 py-2 font-semibold text-navy-700 hover:bg-cyan-100">ขอใบเสนอราคา</Link>
@@ -58,7 +60,7 @@ export function DesktopNav({ cats }: { cats: NavItem[] }) {
 /** เมนูมือถือแบบลิ้นชัก */
 export function MobileMenu({ cats, phone, phoneHref, lineUrl }: { cats: NavItem[]; phone: string; phoneHref: string; lineUrl: string }) {
   const { ref, path } = useAutoClose();
-  const items: NavItem[] = [{ href: '/', label: 'หน้าแรก' }, { href: '/products', label: 'สินค้าทั้งหมด' }, ...cats, { href: '/services', label: 'บริการออกแบบระบบ / ขอใบเสนอราคา' }, { href: '/articles', label: 'บทความ' }, { href: '/about', label: 'เกี่ยวกับเรา' }, { href: '/contact', label: 'ติดต่อเรา' }, { href: '/order/lookup', label: 'ตรวจสอบคำสั่งซื้อ' }];
+  const items: NavItem[] = [{ href: '/', label: 'หน้าแรก' }, { href: '/products', label: 'สินค้าทั้งหมด' }, ...cats, { href: '/services', label: 'บริการออกแบบระบบ / ขอใบเสนอราคา' }, { href: '/articles', label: 'บทความ' }, { href: '/csr', label: 'กิจกรรม CSR' }, { href: '/about', label: 'เกี่ยวกับเรา' }, { href: '/contact', label: 'ติดต่อเรา' }, { href: '/order/lookup', label: 'ตรวจสอบคำสั่งซื้อ' }];
   return (
     <details ref={ref} className="md:hidden">
       <summary aria-label="เปิดเมนู" className="flex h-11 w-11 list-none items-center justify-center rounded-lg border border-slate-300 [&::-webkit-details-marker]:hidden">
@@ -70,7 +72,7 @@ export function MobileMenu({ cats, phone, phoneHref, lineUrl }: { cats: NavItem[
         ))}
         <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
           <a href={phoneHref} className="btn-outline">โทร {phone}</a>
-          <a href={lineUrl} target="_blank" rel="noopener" className="btn-line">แอดไลน์</a>
+          <a href={lineUrl} target="_blank" rel="noopener" className="btn-line"><LineIcon />แอดไลน์</a>
         </div>
       </nav>
     </details>
@@ -87,7 +89,7 @@ export function FloatingContact({ phoneHref, lineUrl }: { phoneHref: string; lin
       <a href={phoneHref} aria-label="โทรหาเรา" className={`${c} bg-navy-700`}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" /></svg>
       </a>
-      <a href={lineUrl} target="_blank" rel="noopener" aria-label="แชท LINE" className={`${c} bg-line text-xs font-bold`}>LINE</a>
+      <a href={lineUrl} target="_blank" rel="noopener" aria-label="แชท LINE" className={`${c} bg-line`}><LineIcon className="h-7 w-7" /></a>
     </div>
   );
 }

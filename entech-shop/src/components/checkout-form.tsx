@@ -98,7 +98,7 @@ export function CheckoutForm({ pickupAddress }: { pickupAddress: string }) {
             <Field id="name" label="ชื่อ-นามสกุล *" err={errs.name}><input className="input" value={f.name} onChange={set('name')} autoComplete="name" /></Field>
             <Field id="phone" label="เบอร์โทรศัพท์ *" err={errs.phone}><input type="tel" className="input" value={f.phone} onChange={set('phone')} inputMode="tel" autoComplete="tel" placeholder="08x-xxx-xxxx" /></Field>
           </div>
-          <Field id="email" label="อีเมล *" err={errs.email} hint="ใช้ส่งรายละเอียดคำสั่งซื้อ และค้นหาคำสั่งซื้อภายหลัง"><input type="email" className="input" value={f.email} onChange={set('email')} autoComplete="email" /></Field>
+          <Field id="email" label="อีเมล *" err={errs.email} hint="ใช้ส่งรายละเอียดคำสั่งซื้อ และค้นหาคำสั่งซื้อภายหลัง"><input type="email" className="input" value={f.email} onChange={set('email')} autoComplete="email" spellCheck={false} /></Field>
         </section>
 
         <section className="card space-y-4 p-6">
@@ -135,7 +135,7 @@ export function CheckoutForm({ pickupAddress }: { pickupAddress: string }) {
           {wantTax && (
             <div className="grid gap-4 rounded-xl border border-slate-200 p-4 md:grid-cols-2">
               <Field id="taxName" label="ชื่อบริษัท / ผู้เสียภาษี *" err={errs.taxName}><input className="input" value={f.taxName} onChange={set('taxName')} autoComplete="organization" /></Field>
-              <Field id="taxId" label="เลขประจำตัวผู้เสียภาษี (13 หลัก) *" err={errs.taxId}><input className="input" value={f.taxId} onChange={set('taxId')} inputMode="numeric" maxLength={13} /></Field>
+              <Field id="taxId" label="เลขประจำตัวผู้เสียภาษี (13 หลัก) *" err={errs.taxId}><input className="input" value={f.taxId} onChange={set('taxId')} inputMode="numeric" maxLength={13} autoComplete="off" spellCheck={false} /></Field>
               <Field id="taxBranch" label="สาขา" hint="เว้นว่าง = สำนักงานใหญ่"><input className="input" value={f.taxBranch} onChange={set('taxBranch')} placeholder="สำนักงานใหญ่" /></Field>
               <Field id="taxAddress" label="ที่อยู่สำหรับออกใบกำกับภาษี *" err={errs.taxAddress} className="md:col-span-2">
                 <textarea className="input" rows={2} value={f.taxAddress} onChange={set('taxAddress')} />
@@ -171,7 +171,7 @@ export function CheckoutForm({ pickupAddress }: { pickupAddress: string }) {
         ))}
         <hr className="border-slate-200" />
         <div className="flex gap-2">
-          <input aria-label="โค้ดส่วนลด" className="input" placeholder="โค้ดส่วนลด" value={coupon} onChange={(e) => setCoupon(e.target.value)}
+          <input aria-label="โค้ดส่วนลด" className="input" placeholder="กรอกโค้ดส่วนลด…" autoComplete="off" spellCheck={false} autoCapitalize="characters" value={coupon} onChange={(e) => setCoupon(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setAppliedCoupon(coupon.trim().toUpperCase()); } }} />
           <button type="button" className="btn-outline" onClick={() => setAppliedCoupon(coupon.trim().toUpperCase())}>ใช้</button>
         </div>

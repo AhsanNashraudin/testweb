@@ -1,7 +1,8 @@
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { saveArticle } from '../actions';
+import { ImagePicker } from '@/components/image-picker';
 
-type A = { id: number; slug: string; title: string; excerpt: string; body: string; seoTitle: string; seoDesc: string; published: boolean };
+type A = { id: number; slug: string; title: string; excerpt: string; body: string; seoTitle: string; seoDesc: string; published: boolean; kind: 'article' | 'csr'; image: string };
 
 /** ฟอร์มบทความ ใช้ทั้งหน้าเขียนใหม่และหน้าแก้ไข (ไม่ใส่ HTML ได้ เนื้อหาเป็นข้อความล้วน) */
 export function ArticleForm({ article: a }: { article?: A }) {
@@ -13,6 +14,17 @@ export function ArticleForm({ article: a }: { article?: A }) {
         <SubmitButton>บันทึก</SubmitButton>
       </div>
       <section className="card grid gap-4 p-5">
+        <fieldset>
+          <legend className="label">ประเภท</legend>
+          <div className="flex flex-wrap gap-2">
+            {([['article', 'บทความความรู้ (หน้า /articles)'], ['csr', 'กิจกรรม CSR (หน้า /csr)']] as const).map(([v, l]) => (
+              <label key={v} className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm has-[:checked]:border-navy-700 has-[:checked]:bg-navy-50 has-[:checked]:font-semibold">
+                <input type="radio" name="kind" value={v} defaultChecked={(a?.kind ?? 'article') === v} className="h-4 w-4" /> {l}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <ImagePicker name="image" value={a?.image ?? ''} label="รูปปก (ไม่บังคับ)" aspect="aspect-[16/9]" hint="แนะนำรูปแนวนอน 16:9 · ลากไฟล์มาวางได้" />
         <div><label className="label" htmlFor="title">หัวข้อ *</label><input id="title" name="title" defaultValue={a?.title} className="input w-full" required maxLength={150} /></div>
         <div>
           <label className="label" htmlFor="slug">slug (ส่วนท้ายของลิงก์) *</label>
@@ -25,6 +37,7 @@ export function ArticleForm({ article: a }: { article?: A }) {
         <div>
           <label className="label" htmlFor="body">เนื้อหา</label>
           <textarea id="body" name="body" defaultValue={a?.body} rows={16} className="input w-full" placeholder="เว้นบรรทัดว่างหนึ่งบรรทัดเพื่อขึ้นย่อหน้าใหม่" />
+          <p className="mt-1 text-xs text-muted">ทำตาราง: เขียนแต่ละแถวเป็นบรรทัด คั่นช่องด้วย | (บรรทัดแรก = หัวตาราง) เช่น <code>ขนาด | จำนวนคน</code> · ทำรายการ: ขึ้นต้นบรรทัดด้วย •</p>
         </div>
       </section>
       <section className="card grid gap-4 p-5">

@@ -14,6 +14,8 @@ const OLD: [string, string][] = [
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // อัปโหลดรูปจากหลังบ้าน (ย่อในเบราว์เซอร์แล้ว ปกติไม่กี่ร้อย KB)
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
   async redirects() {
     return [
       ...OLD.map(([id, destination]) => ({ source: `/${id}/:slug*`, destination, permanent: true })),

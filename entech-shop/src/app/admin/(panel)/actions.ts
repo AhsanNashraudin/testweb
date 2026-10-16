@@ -5,6 +5,7 @@ import { db, schema as s } from '@/db';
 import { requireAdmin, int, num, str } from '@/lib/admin';
 import { isProvince } from '@/lib/provinces';
 import { STATUS_TH, QUOTE_STATUS_TH } from '@/lib/status';
+import { DEFAULT_CONTACT, DEFAULT_HOME, SECTION_KEYS, safeHref, safeImage, type Home } from '@/lib/content';
 
 type Result = { ok?: string; err?: string } | null;
 
@@ -65,8 +66,10 @@ export async function saveProduct(_prev: Result, form: FormData): Promise<Result
       if (bulkPrice && bulkMinQty < 2) throw new Error(`${label}: กรุณาระบุจำนวนขั้นต่ำของราคาส่ง (2 ขึ้นไป)`);
       return { v, price, compareAtPrice, bulkPrice: bulkPrice ? bulkPrice : 0, bulkMinQty: bulkPrice ? bulkMinQty : 0, stock: int(form.get(`stock_${v}`), 0, 100000), weightKg: num(form.get(`weight_${v}`), 0, 5000) };
     });
+    const image = form.has('image') ? safeImage(str(form.get('image'))) : undefined;
+    if (image === '') throw new Error('กรุณาเลือกรูปสินค้า');
     const product = {
-      name, shortDesc: str(form.get('shortDesc'), 300), description: str(form.get('description'), 5000), badge: str(form.get('badge'), 30),
+      name, ...(image && { image }), shortDesc: str(form.get('shortDesc'), 300), description: str(form.get('description'), 5000), badge: str(form.get('badge'), 30),
       isActive: form.get('isActive') === 'on', isFeatured: form.get('isFeatured') === 'on',
       seoTitle: str(form.get('seoTitle'), 70), seoDesc: str(form.get('seoDesc'), 170),
       specs: str(form.get('specs'), 8000),
@@ -186,6 +189,8 @@ export async function saveArticle(_prev: Result, form: FormData): Promise<Result
     const values = {
       title, slug, body,
       excerpt: str(form.get('excerpt'), 300),
+      kind: form.get('kind') === 'csr' ? 'csr' as const : 'article' as const,
+      image: safeImage(str(form.get('image'))),
       seoTitle: str(form.get('seoTitle'), 70),
       seoDesc: str(form.get('seoDesc'), 180),
       published,
@@ -195,4 +200,67 @@ export async function saveArticle(_prev: Result, form: FormData): Promise<Result
     if (id) await db.update(s.articles).set(values).where(eq(s.articles.id, id));
     else await db.insert(s.articles).values(values);
   }, 'บันทึกบทความแล้ว');
+}
+
+// ---------- รูปภาพ ----------
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+/** อัปโหลดรูป 1 รูป (ย่อขนาดในเบราว์เซอร์มาแล้ว) → คืน URL /media/<id> */
+export async function uploadMedia(form: FormData): Promise<{ url?: string; err?: string }> {
+  await requireAdmin();
+  const f = form.get('file');
+  if (!(f instanceof File) || !f.size) return { err: 'ไม่พบไฟล์รูป' };
+  if (!IMAGE_TYPES.includes(f.type)) return { err: 'รองรับเฉพาะรูป JPG, PNG หรือ WebP' };
+  if (f.size > 3_000_000) return { err: 'รูปใหญ่เกินไป (เกิน 3 MB)' };
+  const [m] = await db.insert(s.media).values({ mime: f.type, data: Buffer.from(await f.arrayBuffer()).toString('base64') }).returning({ id: s.media.id });
+  return { url: `/media/${m.id}` };
+}
+
+// ---------- ข้อมูลติดต่อ (ใช้ทั้งเว็บ) ----------
+export async function saveContact(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const c = Object.fromEntries(Object.keys(DEFAULT_CONTACT).map((k) => [k, str(form.get(k), 300)])) as typeof DEFAULT_CONTACT;
+    for (const k of ['company', 'phone', 'line'] as const) if (!c[k]) throw new Error('กรุณากรอกชื่อบริษัท เบอร์โทร และ LINE');
+    for (const k of ['lineUrl', 'facebook', 'mapUrl'] as const) if (c[k] && !c[k].startsWith('https://')) throw new Error('ลิงก์ต้องขึ้นต้นด้วย https://');
+    if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) throw new Error('อีเมลไม่ถูกต้อง');
+    await db.insert(s.settings).values({ key: 'contact', value: JSON.stringify(c) })
+      .onConflictDoUpdate({ target: s.settings.key, set: { value: JSON.stringify(c) } });
+  }, 'บันทึกข้อมูลติดต่อแล้ว — แสดงทั้งเว็บทันที');
+}
+
+// ---------- หน้าแรก ----------
+export async function saveHome(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    let raw: Partial<Home>;
+    try { raw = JSON.parse(String(form.get('config') ?? '{}')); } catch { throw new Error('ข้อมูลไม่ถูกต้อง ลองโหลดหน้าใหม่'); }
+    const t = (v: unknown, max = 300) => str(typeof v === 'string' ? v : '', max);
+    const link = (v: unknown, label: string) => {
+      const h = t(v, 300);
+      if (h && !safeHref(h)) throw new Error(`ลิงก์ "${label}" ต้องขึ้นต้นด้วย / (หน้าในเว็บ) หรือ https://`);
+      return h;
+    };
+    const h = raw.hero ?? DEFAULT_HOME.hero;
+    const image = t(h.image);
+    if (!safeImage(image)) throw new Error('กรุณาเลือกรูปแบนเนอร์');
+    const hero = {
+      badge: t(h.badge, 60), title: t(h.title, 120), lead: t(h.lead, 300), sub: t(h.sub, 300),
+      btn1Label: t(h.btn1Label, 40), btn1Href: link(h.btn1Href, 'ปุ่มที่ 1'),
+      btn2Label: t(h.btn2Label, 40), btn2Href: link(h.btn2Href, 'ปุ่มที่ 2'),
+      image, imageAlt: t(h.imageAlt, 120) || 'ENTECH', imageSide: h.imageSide === 'left' ? 'left' as const : 'right' as const,
+    };
+    if (!hero.title) throw new Error('กรุณาใส่หัวข้อหลักของแบนเนอร์');
+    const sections = (Array.isArray(raw.sections) ? raw.sections : [])
+      .filter((x, i, a) => SECTION_KEYS.includes(x?.key) && a.findIndex((y) => y?.key === x.key) === i)
+      .map((x) => ({ key: x.key, visible: x.visible !== false, title: t(x.title, 80) }));
+    const why = (Array.isArray(raw.why) ? raw.why : []).slice(0, 8)
+      .map((w) => ({ title: t(w?.title, 60), desc: t(w?.desc, 200) })).filter((w) => w.title);
+    const c = raw.cta ?? DEFAULT_HOME.cta;
+    const home: Home = {
+      hero, sections, why,
+      featuredCount: Math.min(16, Math.max(4, Math.round(Number(raw.featuredCount) / 4) * 4 || 8)),
+      cta: { title: t(c.title, 120), desc: t(c.desc, 300), btnLabel: t(c.btnLabel, 40), btnHref: link(c.btnHref, 'ปุ่มแถบปิดท้าย'), showLine: c.showLine !== false },
+      seoTitle: t(raw.seoTitle, 70), seoDesc: t(raw.seoDesc, 170),
+    };
+    await db.insert(s.settings).values({ key: 'home', value: JSON.stringify(home) })
+      .onConflictDoUpdate({ target: s.settings.key, set: { value: JSON.stringify(home) } });
+  }, 'บันทึกหน้าแรกแล้ว');
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cart } from './cart-store';
 import { baht } from '@/lib/format';
+import { LineIcon } from '@/components/line-icon';
 
 type V = { id: number; name: string; price: number; compareAtPrice: number; stock: number; bulkPrice: number; bulkMinQty: number };
 
@@ -64,7 +65,7 @@ export function AddToCart({ variants, vatIncluded, lineUrl, quoteHref }: { varia
       <p className={`text-sm ${out ? 'text-sale' : 'text-success'}`}>{quote ? 'สินค้าสั่งผลิต/ราคาตามสเปก — แจ้งรุ่นและจำนวน ทีมขายตอบกลับภายในวันทำการ' : out ? 'สินค้าหมดชั่วคราว — สอบถามรอบผลิตถัดไปทาง LINE หรือขอใบเสนอราคา' : `มีสินค้า ${v.stock} ชิ้น`}</p>
       {quote ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <a href={lineUrl} target="_blank" rel="noopener" className="btn-line py-3">สอบถามราคาทาง LINE</a>
+          <a href={lineUrl} target="_blank" rel="noopener" className="btn-line py-3"><LineIcon />สอบถามราคาทาง LINE</a>
           <a href={quoteHref} className="btn-primary py-3">ขอใบเสนอราคา</a>
         </div>
       ) : <>
@@ -79,7 +80,7 @@ export function AddToCart({ variants, vatIncluded, lineUrl, quoteHref }: { varia
         <button type="button" className="btn-primary flex-1" disabled={out} onClick={() => add(true)}>ซื้อเลย</button>
       </div>
       </>}
-      {!quote && <a href={lineUrl} target="_blank" rel="noopener" className="btn w-full border-[1.5px] border-line bg-white text-line hover:bg-success-50">💬 ติดต่อฝ่ายขายทาง LINE OA (สั่งจำนวนมาก / ต่อรองราคา)</a>}
+      {!quote && <a href={lineUrl} target="_blank" rel="noopener" className="btn-line w-full"><LineIcon />ติดต่อฝ่ายขายทาง LINE OA (สั่งจำนวนมาก)</a>}
       <p id="qty-note" className="text-xs text-muted" aria-live="polite">{!quote && (capped || (!out && qty >= max)) ? `สั่งได้สูงสุด ${max} ชิ้นต่อรายการ (ตามสต็อก) — ต้องการมากกว่านี้ ขอใบเสนอราคาได้` : ''}</p>
     </div>
   );

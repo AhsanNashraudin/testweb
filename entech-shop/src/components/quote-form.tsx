@@ -34,7 +34,7 @@ export function QuoteForm({ topics, source = '', defaultDetail = '' }: { topics:
       <Field id="q-name" label="ชื่อ-นามสกุล *" err={errs.name}><input name="name" className="input" autoComplete="name" /></Field>
       <Field id="q-company" label="บริษัท / หน่วยงาน"><input name="company" className="input" autoComplete="organization" /></Field>
       <Field id="q-phone" label="เบอร์โทรศัพท์ *" err={errs.phone}><input name="phone" className="input" inputMode="tel" autoComplete="tel" /></Field>
-      <Field id="q-email" label="อีเมล" err={errs.email}><input name="email" type="email" className="input" autoComplete="email" /></Field>
+      <Field id="q-email" label="อีเมล" err={errs.email}><input name="email" type="email" className="input" autoComplete="email" spellCheck={false} /></Field>
       <Field id="q-topic" label="หัวข้อ *" err={errs.topic}><select name="topic" className="input">{topics.map((t) => <option key={t}>{t}</option>)}</select></Field>
       <Field id="q-province" label="จังหวัดหน้างาน"><select name="province" className="input"><option value="">—</option>{PROVINCES.map((p) => <option key={p}>{p}</option>)}</select></Field>
       <Field id="q-detail" label="รายละเอียด" className="md:col-span-2"><textarea name="detail" rows={4} className="input" defaultValue={defaultDetail} placeholder="ปริมาณน้ำเสีย/จำนวนผู้ใช้งาน ขนาดพื้นที่ ระยะเวลาที่ต้องการ" /></Field>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalPage } from '@/components/legal';
-import { CONTACT } from '@/components/site';
+import { getContact } from '@/lib/content';
 import { loadShippingConfig } from '@/lib/settings';
 import { baht } from '@/lib/format';
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Terms() {
-  const cfg = await loadShippingConfig();
+  const [CONTACT, cfg] = await Promise.all([getContact(), loadShippingConfig()]);
   const vatIn = cfg.settings.prices_include_vat === '1';
   const bank = !!cfg.settings.bank_account;
   return (

@@ -9,14 +9,14 @@ export default async function Articles() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">บทความ</h1>
-        <Link href="/admin/articles/new" className="btn-primary">+ เขียนบทความใหม่</Link>
+        <h1 className="text-2xl font-bold">บทความ & กิจกรรม CSR</h1>
+        <Link href="/admin/articles/new" className="btn-primary">+ เขียนใหม่</Link>
       </div>
       {rows.map((a) => (
         <Link key={a.id} href={`/admin/articles/${a.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 hover:shadow-md" data-testid="admin-article-row">
           <div className="min-w-0">
             <p className="truncate font-bold">{a.title}</p>
-            <p className="text-sm text-muted">/articles/{a.slug}</p>
+            <p className="text-sm text-muted"><span className="mr-2 rounded bg-navy-50 px-1.5 py-0.5 text-xs font-semibold text-navy-700">{a.kind === 'csr' ? 'กิจกรรม CSR' : 'บทความ'}</span>/articles/{a.slug}</p>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${a.published ? 'bg-success-50 text-success' : 'bg-slate-200 text-muted'}`}>
             {a.published ? 'เผยแพร่แล้ว' : 'ฉบับร่าง'}

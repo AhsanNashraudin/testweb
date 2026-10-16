@@ -7,22 +7,22 @@ import generatePayload from 'promptpay-qr';
 import { db, schema as s } from '@/db';
 import { getSettings } from '@/lib/settings';
 import { baht } from '@/lib/format';
-import { CONTACT, TEL } from '@/components/site';
-import { MAP_URL } from '@/lib/site';
+import { getContact } from '@/lib/content';
 import { StatusBadge } from '@/components/status-badge';
 import { FocusOnMount } from '@/components/focus-on-mount';
+import { LineIcon } from '@/components/line-icon';
 
 export const metadata: Metadata = { title: 'คำสั่งซื้อของคุณ', robots: { index: false } };
 
 type Props = { params: Promise<{ code: string }>; searchParams: Promise<{ k?: string }> };
 
 export default async function OrderPage({ params, searchParams }: Props) {
-  const [{ code }, { k }] = await Promise.all([params, searchParams]);
+  const [CONTACT, { code }, { k }, st] = await Promise.all([getContact(), params, searchParams, getSettings()]);
+  const TEL = CONTACT.tel;
   if (!k) notFound();
   const [o] = await db.select().from(s.orders).where(and(eq(s.orders.code, code), eq(s.orders.accessKey, k)));
   if (!o) notFound();
   const items = await db.select().from(s.orderItems).where(eq(s.orderItems.orderId, o.id));
-  const st = await getSettings();
   const qr = o.paymentMethod === 'promptpay' && o.status === 'pending_payment' && st.promptpay_id
     ? await QRCode.toDataURL(generatePayload(st.promptpay_id, { amount: o.total }), { margin: 1, width: 260 })
     : null;
@@ -77,12 +77,12 @@ export default async function OrderPage({ params, searchParams }: Props) {
         <div className="grid gap-1 rounded-xl border border-slate-200 p-4 text-sm">
           <p><b>ผู้รับ:</b> {o.name} · {o.phone}</p>
           {o.shippingOption !== 'pickup' ? <p><b>ที่อยู่จัดส่ง:</b> {o.address} จ.{o.province} {o.postcode}</p> : (
-            <p data-testid="pickup-info"><b>รับสินค้าที่โรงงาน:</b> {CONTACT.address} · {CONTACT.hours} · โทร <a href={TEL.main} className="text-navy-700 underline">{CONTACT.phone}</a> · <a href={MAP_URL} target="_blank" rel="noopener" className="font-semibold text-navy-700 underline">เปิดแผนที่</a><br /><span className="text-muted">ทีมงานจะโทรนัดวันรับหลังยืนยันการชำระเงิน</span></p>
+            <p data-testid="pickup-info"><b>รับสินค้าที่โรงงาน:</b> {CONTACT.address} · {CONTACT.hours} · โทร <a href={TEL.main} className="text-navy-700 underline">{CONTACT.phone}</a> · <a href={CONTACT.mapUrl} target="_blank" rel="noopener" className="font-semibold text-navy-700 underline">เปิดแผนที่</a><br /><span className="text-muted">ทีมงานจะโทรนัดวันรับหลังยืนยันการชำระเงิน</span></p>
           )}
           {o.taxId && <p><b>ใบกำกับภาษี:</b> {o.taxName} · เลขผู้เสียภาษี {o.taxId} · {o.taxBranch || 'สำนักงานใหญ่'}<br />{o.taxAddress}</p>}
         </div>
         <div className="flex flex-wrap justify-center gap-3">
-          <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="btn-line">ส่งสลิปทาง LINE</a>
+          <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="btn-line"><LineIcon />ส่งสลิปทาง LINE</a>
           <Link href="/products" className="btn-outline">เลือกซื้อสินค้าต่อ</Link>
         </div>
       </div>

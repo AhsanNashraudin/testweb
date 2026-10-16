@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CONTACT } from '@/components/site';
+import { getContact } from '@/lib/content';
 import { loadShippingConfig } from '@/lib/settings';
 import { baht } from '@/lib/format';
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 type QA = { q: string; a: string; link?: [string, string] };
 
 export default async function Faq() {
-  const cfg = await loadShippingConfig();
+  const [CONTACT, cfg] = await Promise.all([getContact(), loadShippingConfig()]);
   const vatIn = cfg.settings.prices_include_vat === '1';
   const bank = !!cfg.settings.bank_account;
   const fees = cfg.zones.map((z) => `${z.name} ${baht(z.baseFee)}`).join(', ');
@@ -48,7 +48,7 @@ export default async function Faq() {
           </details>
         ))}
       </div>
-      <p className="mt-8 text-muted">ไม่พบคำตอบที่ต้องการ? ติดต่อ LINE <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="text-navy-700 underline">{CONTACT.line}</a> หรือโทร <a href="tel:028130971" className="text-navy-700 underline">{CONTACT.phone}</a></p>
+      <p className="mt-8 text-muted">ไม่พบคำตอบที่ต้องการ? ติดต่อ LINE <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="text-navy-700 underline">{CONTACT.line}</a> หรือโทร <a href={CONTACT.tel.mobile} className="text-navy-700 underline">{CONTACT.mobile}</a></p>
     </div>
   );
 }

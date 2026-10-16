@@ -12,7 +12,7 @@ test('บทความ: มีบทความตั้งต้น · ห�
   await page.goto('/articles');
   await expect(page.getByRole('heading', { level: 1, name: 'บทความ' })).toBeVisible();
   const before = await page.getByTestId('article-card').count();
-  expect(before).toBeGreaterThanOrEqual(6); // บทความตั้งต้นจาก seed (ความรู้ 2 + ข่าวกิจกรรม 4)
+  expect(before).toBeGreaterThanOrEqual(2); // บทความความรู้ตั้งต้น 2 เรื่อง (กิจกรรม CSR แยกไปหน้า /csr)
 
   await login(page);
   await page.goto('/admin/articles/new');
@@ -68,4 +68,22 @@ test('หน้าข้อมูล: เกี่ยวกับเรา, FAQ,
     await page.locator('footer').getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(url);
   }
+});
+
+test('บทความ/CSR แยกหน้า · คู่มือขนาดถังเป็นตาราง · กระถางใหม่เป็นสอบถามราคา', async ({ page }) => {
+  await page.goto('/csr');
+  expect(await page.getByTestId('article-card').count()).toBeGreaterThanOrEqual(4);
+  await expect(page.getByTestId('article-card').first()).toContainText('กิจกรรม CSR');
+  await page.goto('/articles');
+  await expect(page.locator('main')).not.toContainText('มอบถังเก็บน้ำให้โรงเรียนบ้านซับเดื่อ');
+  await page.goto('/articles/water-tank-size-guide');
+  const table = page.getByTestId('article-table');
+  await expect(table.locator('thead')).toContainText('ขนาดถัง');
+  await expect(table.locator('tbody tr')).toHaveCount(7);
+  await expect(page.locator('article img').first()).toBeVisible(); // รูปปกจากลูกค้า
+  await page.goto('/products/planters');
+  await expect(page.getByText('กระถางไฟเบอร์กลาสทรงชาม (อ่างบัว)')).toBeVisible();
+  await page.goto('/');
+  await expect(page.locator('[data-section=csr]')).toBeVisible();
+  await expect(page.locator('[data-section=articles]')).toBeVisible();
 });

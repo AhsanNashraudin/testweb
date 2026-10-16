@@ -1,8 +1,9 @@
 import 'server-only';
+import { cache } from 'react';
 import { and, asc, eq, like, or, sql, desc } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 
-export const getCategories = () => db.select().from(s.categories).orderBy(asc(s.categories.sort));
+export const getCategories = cache(() => db.select().from(s.categories).orderBy(asc(s.categories.sort)));
 
 const priceAgg = {
   minPrice: sql<number>`min(${s.variants.price})`.as('min_price'),
@@ -38,7 +39,7 @@ export async function listProducts(opts: { categoryId?: number; q?: string; sort
     .limit(opts.limit ?? 60);
 }
 
-export async function getProduct(slug: string) {
+export const getProduct = cache(async function getProduct(slug: string) {
   const [p] = await db
     .select({ product: s.products, category: s.categories })
     .from(s.products)
@@ -47,7 +48,7 @@ export async function getProduct(slug: string) {
   if (!p) return null;
   const variants = await db.select().from(s.variants).where(eq(s.variants.productId, p.product.id)).orderBy(asc(s.variants.sort));
   return { ...p, variants };
-}
+});
 
 export async function relatedProducts(categoryId: number, excludeId: number) {
   const list = await listProducts({ categoryId, limit: 5 });

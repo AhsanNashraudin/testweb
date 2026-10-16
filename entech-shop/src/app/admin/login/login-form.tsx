@@ -10,7 +10,7 @@ export function LoginForm({ next }: { next: string }) {
       <Image src="/images/logo.png" alt="ENTECH" width={92} height={55} />
       <h1 className="text-2xl font-bold">เข้าสู่ระบบหลังบ้าน</h1>
       <input type="hidden" name="next" value={next} />
-      <div><label className="label" htmlFor="email">อีเมล</label><input id="email" name="email" type="email" required defaultValue={state?.email} key={state?.email} className="input" autoComplete="username" /></div>
+      <div><label className="label" htmlFor="email">อีเมล</label><input id="email" name="email" type="email" required defaultValue={state?.email} key={state?.email} className="input" autoComplete="username" spellCheck={false} /></div>
       <div><label className="label" htmlFor="password">รหัสผ่าน</label><input id="password" name="password" type="password" required className="input" autoComplete="current-password" /></div>
       {state?.error && <p className="err" role="alert">{state.error}</p>}
       <button className="btn-primary w-full" disabled={pending}>{pending ? 'กำลังตรวจสอบ…' : 'เข้าสู่ระบบ'}</button>

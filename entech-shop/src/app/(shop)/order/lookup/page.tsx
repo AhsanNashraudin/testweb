@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
-import { CONTACT } from '@/components/site';
+import { getContact } from '@/lib/content';
 
 export const metadata: Metadata = { title: 'ตรวจสอบคำสั่งซื้อ', robots: { index: false } };
 
 type SP = Promise<{ code?: string; phone?: string }>;
 
 export default async function OrderLookup({ searchParams }: { searchParams: SP }) {
-  const { code = '', phone = '' } = await searchParams;
+  const [CONTACT, { code = '', phone = '' }] = await Promise.all([getContact(), searchParams]);
   const c = code.trim().toUpperCase().slice(0, 20), p = phone.replace(/\D/g, '').slice(0, 10);
   let notFound = false;
   if (c && p) {

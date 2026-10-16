@@ -40,7 +40,7 @@ test('มือถือ: หลังบ้านใช้งานได้ �
   await page.locator('[name=password]').fill('Entech@2026');
   await page.getByRole('button', { name: 'เข้าสู่ระบบ' }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  for (const p of ['/admin', '/admin/orders', '/admin/products', '/admin/products/1', '/admin/shipping', '/admin/quotes', '/admin/articles']) {
+  for (const p of ['/admin', '/admin/orders', '/admin/products', '/admin/products/1', '/admin/shipping', '/admin/quotes', '/admin/articles', '/admin/home', '/admin/site']) {
     await page.goto(p);
     expect(await overflow(page), p).toBeLessThanOrEqual(1);
   }

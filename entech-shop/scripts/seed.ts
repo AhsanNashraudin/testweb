@@ -1,6 +1,6 @@
 /* ข้อมูลตั้งต้น: สินค้าจาก scripts/catalog.ts (ราคาจาก Price List), โซนค่าส่งจากชีต Delivery Fee */
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db, schema as s } from '../src/db';
 import { CATS, PRODUCTS, type P } from './catalog';
 import { ARTICLES } from './articles';
@@ -29,10 +29,19 @@ async function insertProducts(list: P[], catId: Record<string, number>) {
 async function insertArticles() {
   const have = new Set((await db.select({ slug: s.articles.slug }).from(s.articles)).map((a) => a.slug));
   const rows = ARTICLES.filter((a) => !have.has(a.slug)).map((a) => ({
-    slug: a.slug, title: a.title, excerpt: a.excerpt, body: a.body, published: true,
+    slug: a.slug, title: a.title, excerpt: a.excerpt, body: a.body, published: true, kind: a.kind ?? 'article', image: a.image ?? '',
     publishedAt: new Date(`${a.publishedAt}T09:00:00+07:00`),
   }));
   if (rows.length) await db.insert(s.articles).values(rows);
+  // ฐานข้อมูลเดิม: อัปเดตบทความตั้งต้นตามรอบแก้ของลูกค้า (เฉพาะที่แอดมินยังไม่ได้แก้เอง)
+  for (const a of ARTICLES.filter((x) => have.has(x.slug))) {
+    const [cur] = await db.select().from(s.articles).where(eq(s.articles.slug, a.slug));
+    const patch: Partial<typeof s.articles.$inferInsert> = {};
+    if (a.kind === 'csr' && cur.kind === 'article') patch.kind = 'csr';
+    if (a.image && !cur.image) patch.image = a.image;
+    if (cur.body.includes('\n• ') && !cur.body.includes(' | ') && a.body.includes(' | ')) patch.body = a.body; // รายการ → ตาราง
+    if (Object.keys(patch).length) await db.update(s.articles).set(patch).where(eq(s.articles.id, cur.id));
+  }
   return rows.length;
 }
 
@@ -60,6 +69,9 @@ async function main() {
     const catId = Object.fromEntries(existing.map((c) => [c.slug, c.id]));
     const have = new Set((await db.select({ slug: s.products.slug }).from(s.products)).map((p) => p.slug));
     const added = await insertProducts(PRODUCTS.filter((p) => !have.has(p.slug)), catId);
+    // หมวดกระถาง: เปลี่ยนรูปถ่ายเดิมเป็นรูปสินค้าตัดพื้นหลัง (เฉพาะถ้ายังเป็นรูปเดิม)
+    await db.update(s.categories).set({ image: '/images/products/cat-planters.jpg' })
+      .where(and(eq(s.categories.slug, 'planters'), eq(s.categories.image, '/images/products/planter.jpg')));
     const arts = await insertArticles();
     if (arts) console.log(`✓ เพิ่มบทความ ${arts} เรื่อง`);
     await syncAdmin();

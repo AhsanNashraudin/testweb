@@ -76,11 +76,15 @@ test('H7/L1: contrast ปุ่มและข้อความหลักผ�
   };
   const pairs = await page.evaluate(() => {
     const bgOf = (el: Element | null): string => { while (el) { const c = getComputedStyle(el).backgroundColor; if (c !== 'rgba(0, 0, 0, 0)') return c; el = el.parentElement; } return 'rgb(255, 255, 255)'; };
-    return [...document.querySelectorAll('a.btn-line, a.btn-primary, button.btn-primary, .text-muted, .line-through, .text-cyan-700, .text-sale')]
+    return [...document.querySelectorAll('a.btn-primary, button.btn-primary, .text-muted, .line-through, .text-cyan-700, .text-sale')]
       .filter((e) => (e as HTMLElement).offsetParent && e.textContent?.trim()).map((e) => ({ t: e.textContent!.trim().slice(0, 20), fg: getComputedStyle(e).color, bg: bgOf(e) }));
   });
   expect(pairs.length).toBeGreaterThan(5);
   for (const p of pairs) expect(ratio(p.fg, p.bg), `${p.t} ${p.fg} on ${p.bg}`).toBeGreaterThanOrEqual(4.5);
+  // ปุ่ม LINE: ลูกค้าเลือกเขียวทางการของ LINE (คอนทราสต์ต่ำกว่าเกณฑ์) → อย่างน้อยต้องเป็นตัวหนาและมีไอคอน
+  const line = page.locator('a.btn-line').first();
+  expect(Number(await line.evaluate((e) => getComputedStyle(e).fontWeight))).toBeGreaterThanOrEqual(700);
+  await expect(line.locator('svg, img')).toHaveCount(1);
 });
 
 test('L4: ปุ่มจำนวนปิดเมื่อถึงขีดจำกัด และแจ้งเมื่อพิมพ์เกินสต็อก', async ({ page }) => {

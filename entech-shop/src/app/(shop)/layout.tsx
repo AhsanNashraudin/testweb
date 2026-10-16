@@ -1,10 +1,13 @@
-import { Header, Footer, CONTACT, TEL } from '@/components/site';
+import { Header, Footer } from '@/components/site';
+import { getContact } from '@/lib/content';
 import { FloatingContact } from '@/components/nav';
 import { NavProgress } from '@/components/nav-progress';
 
 export const dynamic = 'force-dynamic';
 
-export default function ShopLayout({ children }: { children: React.ReactNode }) {
+export default async function ShopLayout({ children }: { children: React.ReactNode }) {
+  const CONTACT = await getContact();
+  const TEL = CONTACT.tel;
   return (
     <>
       <NavProgress />

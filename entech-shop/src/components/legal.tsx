@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { CONTACT } from '@/components/site';
+import { getContact } from '@/lib/content';
 
 export type Section = { h: string; p: (string | React.ReactNode)[] };
 
 /** โครงหน้าข้อความยาว (นโยบาย/เงื่อนไข) ใช้ร่วมกัน */
-export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro?: string; sections: Section[] }) {
+export async function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro?: string; sections: Section[] }) {
+  const CONTACT = await getContact();
   return (
     <article className="container-x max-w-3xl py-10">
       <nav aria-label="breadcrumb" className="text-sm text-muted"><Link href="/" className="hover:underline">หน้าแรก</Link> › {title}</nav>
@@ -22,7 +23,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
       <section className="card mt-10 p-5 text-sm">
         <p className="font-bold">{CONTACT.company}</p>
         <p className="mt-1 text-muted">{CONTACT.address}</p>
-        <p className="mt-1">โทร <a href="tel:028130971" className="text-navy-700 underline">{CONTACT.phone}</a>, <a href="tel:0632061000" className="text-navy-700 underline">{CONTACT.mobile}</a> · อีเมล <a href={`mailto:${CONTACT.email}`} className="break-all text-navy-700 underline">{CONTACT.email}</a> · LINE <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="text-navy-700 underline">{CONTACT.line}</a></p>
+        <p className="mt-1">โทร: <a href={CONTACT.tel.main} className="text-navy-700 underline">{CONTACT.phone}</a>, <a href={CONTACT.tel.mobile} className="text-navy-700 underline">{CONTACT.mobile}</a> · อีเมล: <a href={`mailto:${CONTACT.email}`} className="break-all text-navy-700 underline">{CONTACT.email}</a> · LINE: <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="text-navy-700 underline">{CONTACT.line}</a></p>
       </section>
     </article>
   );

@@ -179,3 +179,59 @@ test('ใบเสนอราคา: เปลี่ยนสถานะ แ�
   await page.goto('/admin'); // cookie ถูกลบแล้ว ต้องเข้าไม่ได้
   await expect(page).toHaveURL(/\/admin\/login/);
 });
+
+test('จัดการหน้าแรก: เปลี่ยนแบนเนอร์ (ข้อความ+รูป) สลับลำดับ ซ่อนส่วน → หน้าเว็บเปลี่ยนตาม', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/home');
+  await page.getByLabel('หัวข้อหลัก *').fill('ถังเก็บน้ำคุณภาพ\nส่งตรงจากโรงงาน');
+  await page.getByLabel('ป้ายเล็กด้านบน').fill('โปรโมชันเดือนนี้');
+  await page.getByLabel('ปุ่มที่ 1 (ปุ่มหลัก) — ข้อความ').fill('ดูถังเก็บน้ำ');
+  await page.getByLabel('ปุ่มที่ 1 — ลิงก์ไปที่').fill('/products/water-tanks');
+  // อัปโหลดรูป → ย่อในเบราว์เซอร์ → ได้ /media/<id>
+  await page.locator('input[type=file]').first().setInputFiles('public/images/products/grand_stone.jpg');
+  await expect(page.locator('img[src^="/media/"]').first()).toBeVisible();
+  // ย้าย "จุดเด่น" (ลำดับ 3) ขึ้นไปเป็นลำดับแรก และซ่อน "บทความล่าสุด"
+  await page.getByRole('button', { name: 'เลื่อน จุดเด่น ขึ้น' }).click();
+  await page.getByRole('button', { name: 'เลื่อน จุดเด่น ขึ้น' }).click();
+  await page.getByTestId('section-row').filter({ hasText: 'บทความล่าสุด' }).getByRole('switch').uncheck();
+  await page.getByLabel('กล่อง 1 — หัวข้อ').fill('ส่งไวทั่วไทย');
+  await expect(page.getByText('มีการแก้ไขที่ยังไม่บันทึก')).toBeVisible();
+  await page.getByRole('button', { name: 'บันทึก' }).first().click();
+  await ok(page);
+  await expect(page.getByText('มีการแก้ไขที่ยังไม่บันทึก')).toHaveCount(0);
+
+  await page.goto('/');
+  const hero = page.getByTestId('hero');
+  await expect(hero.getByRole('heading', { level: 1 })).toHaveText(/ถังเก็บน้ำคุณภาพ\s*ส่งตรงจากโรงงาน/);
+  await expect(hero.getByText('โปรโมชันเดือนนี้')).toBeVisible();
+  await expect(hero.getByRole('link', { name: 'ดูถังเก็บน้ำ' })).toHaveAttribute('href', '/products/water-tanks');
+  await expect(hero.locator('img')).toHaveAttribute('src', /media%2F\d+|\/media\/\d+/);
+  expect(await page.locator('[data-section]').evaluateAll((els) => els.map((e) => e.getAttribute('data-section')))).toEqual(['why', 'categories', 'featured', 'csr', 'cta']);
+  await expect(page.getByText('ส่งไวทั่วไทย')).toBeVisible();
+  // รูปที่อัปโหลดเปิดได้จริง
+  const src = await page.locator('img[src*="media"]').first().getAttribute('src');
+  expect(src).toBeTruthy();
+});
+
+test('จัดการหน้าแรก: ลิงก์อันตรายถูกปฏิเสธ', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/home');
+  await page.getByLabel('ปุ่มที่ 1 — ลิงก์ไปที่').fill('javascript:alert(1)');
+  await page.getByRole('button', { name: 'บันทึก' }).first().click();
+  await expect(page.getByTestId('flash-err')).toContainText('ลิงก์');
+});
+
+test('ข้อมูลร้าน & ติดต่อ: แก้ครั้งเดียว เปลี่ยนทั้งหัวเว็บ ท้ายเว็บ และหน้าติดต่อ', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/site');
+  await page.getByLabel('LINE ID *').fill('@entechnew');
+  await page.getByLabel('เบอร์มือถือ').fill('089-999-8888');
+  await page.getByLabel('ข้อความแถบบนสุดของเว็บ').fill('ลดราคาพิเศษถึงสิ้นเดือน');
+  await page.getByRole('button', { name: 'บันทึก' }).click();
+  await ok(page);
+  await page.goto('/contact');
+  await expect(page.locator('header')).toContainText('ลดราคาพิเศษถึงสิ้นเดือน');
+  await expect(page.locator('header a[href="tel:0899998888"]').first()).toBeVisible();
+  await expect(page.locator('footer')).toContainText('@entechnew');
+  await expect(page.locator('main')).toContainText('089-999-8888');
+});

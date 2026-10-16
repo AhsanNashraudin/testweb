@@ -1,11 +1,14 @@
 import Link from 'next/link';
-import { Header, Footer, CONTACT } from '@/components/site';
+import { Header, Footer } from '@/components/site';
+import { getContact } from '@/lib/content';
 import { getCategories } from '@/lib/catalog';
+import { LineIcon } from '@/components/line-icon';
 
 export const metadata = { title: 'ไม่พบหน้าที่ต้องการ', robots: { index: false } };
 
 /** หน้า 404 (รวม URL เก่าที่ไม่มีใน redirect) — มีเมนู ค้นหา และทางไปต่อครบ */
 export default async function NotFound() {
+  const CONTACT = await getContact();
   const cats = await getCategories();
   return (
     <>
@@ -19,7 +22,7 @@ export default async function NotFound() {
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/" className="btn-primary">กลับหน้าแรก</Link>
-          <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="btn-line">สอบถามทาง LINE</a>
+          <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="btn-line"><LineIcon />สอบถามทาง LINE</a>
         </div>
       </main>
       <Footer />

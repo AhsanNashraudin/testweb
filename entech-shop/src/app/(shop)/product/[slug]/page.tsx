@@ -6,7 +6,8 @@ import { notFound } from 'next/navigation';
 import { getProduct, relatedProducts } from '@/lib/catalog';
 import { AddToCart } from '@/components/add-to-cart';
 import { ProductCard } from '@/components/product-card';
-import { CONTACT } from '@/components/site';
+import { getContact, getHome } from '@/lib/content';
+import { WhyCard } from '@/components/why';
 import { getSettings } from '@/lib/settings';
 import { baht, parseSpecs } from '@/lib/format';
 
@@ -27,10 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
-  const d = await getProduct((await params).slug);
+  const { slug } = await params;
+  const [CONTACT, home, d, st] = await Promise.all([getContact(), getHome(), getProduct(slug), getSettings()]);
   if (!d || !d.variants.length) notFound();
   const { product: p, category: c, variants } = d;
-  const [related, st] = await Promise.all([relatedProducts(c.id, p.id), getSettings()]);
+  const related = await relatedProducts(c.id, p.id);
   const vatIncluded = st.prices_include_vat === '1';
   const priced = variants.filter((v) => v.price > 0);
   const hasBulk = priced.some((v) => v.bulkPrice > 0);
@@ -80,7 +82,7 @@ export default async function ProductPage({ params }: Props) {
               <thead className="bg-navy-700 text-left text-white"><tr><th className="p-2.5">ตัวเลือก</th><th>รหัส</th><th className="text-right">ราคา/ชิ้น</th>{hasBulk && <th className="p-2.5 text-right">ราคาส่ง</th>}</tr></thead>
               <tbody>{priced.map((v) => (
                 <tr key={v.id} className="border-b border-slate-100">
-                  <td className="p-2.5">{v.name}</td><td>{v.sku}</td><td className="text-right">{baht(v.price)}</td>
+                  <td className="p-2.5">{v.name}</td><td className="whitespace-nowrap">{v.sku}</td><td className="whitespace-nowrap text-right">{baht(v.price)}</td>
                   {hasBulk && <td className="p-2.5 text-right">{v.bulkPrice ? `${baht(v.bulkPrice)} (${v.bulkMinQty}+ ชิ้น)` : '—'}</td>}
                 </tr>))}</tbody>
             </table></div>
@@ -89,15 +91,11 @@ export default async function ProductPage({ params }: Props) {
             <h3 className="mb-2 mt-6 font-bold">ข้อมูลจำเพาะ</h3>
             <div className="overflow-x-auto"><table className="w-full min-w-[480px] text-sm" data-testid="specs">
               <thead className="bg-navy-50 text-left"><tr>{specs.head.map((h) => <th key={h} className="p-2.5">{h}</th>)}</tr></thead>
-              <tbody>{specs.rows.map((r, i) => <tr key={i} className="border-b border-slate-100">{r.map((c, j) => <td key={j} className="p-2.5">{c}</td>)}</tr>)}</tbody>
+              <tbody>{specs.rows.map((r, i) => <tr key={i} className="border-b border-slate-100">{r.map((c, j) => <td key={j} className="whitespace-nowrap p-2.5">{c}</td>)}</tr>)}</tbody>
             </table></div>
           </>}
         </div>
-        <aside className="rounded-2xl bg-navy-700 p-6 text-white">
-          <h2 className="mb-3 text-lg font-bold">ทำไมต้อง ENTECH</h2>
-          <ul className="space-y-2 text-sm text-navy-100">{['ผู้ผลิตโดยตรงตั้งแต่ปี 2537', 'วัสดุมาตรฐาน มอก.', 'ไร้สนิม ตลอดอายุการใช้งาน', 'ทีมวิศวกรให้คำปรึกษาฟรี'].map((t) => <li key={t}>✓ {t}</li>)}</ul>
-          <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="btn mt-5 w-full bg-white text-navy-700 hover:bg-cyan-100">ปรึกษาทาง LINE</a>
-        </aside>
+        <WhyCard title={home.sections.find((x) => x.key === 'why')?.title || 'ทำไมต้อง ENTECH'} items={home.why.slice(0, 5)} lineUrl={CONTACT.lineUrl} />
       </section>
       {related.length > 0 && (
         <section className="mt-12">

@@ -77,6 +77,9 @@ export const articles = sqliteTable('articles', {
   title: text('title').notNull(),
   excerpt: text('excerpt').notNull().default(''),
   body: text('body').notNull().default(''),
+  // article = บทความความรู้ · csr = กิจกรรมเพื่อสังคม (แสดงคนละหน้า)
+  kind: text('kind', { enum: ['article', 'csr'] }).notNull().default('article'),
+  image: text('image').notNull().default(''), // รูปปก (ไม่บังคับ)
   seoTitle: text('seo_title').notNull().default(''),
   seoDesc: text('seo_desc').notNull().default(''),
   published: integer('published', { mode: 'boolean' }).notNull().default(false),
@@ -155,3 +158,12 @@ export const admins = sqliteTable('admins', {
 });
 
 
+
+/** รูปที่อัปโหลดจากหลังบ้าน (เก็บในฐานข้อมูล ใช้ได้ทั้งในเครื่องและบน Vercel โดยไม่ต้องตั้งค่าที่เก็บไฟล์เพิ่ม)
+ *  ย่อขนาดในเบราว์เซอร์ก่อนอัปโหลด → ไฟล์ละไม่กี่ร้อย KB · เรียกดูที่ /media/<id> */
+export const media = sqliteTable('media', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  mime: text('mime').notNull(),
+  data: text('data').notNull(), // base64
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(now()),
+});
