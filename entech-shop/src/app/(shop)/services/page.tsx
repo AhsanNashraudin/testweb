@@ -43,18 +43,26 @@ export default async function Services({ searchParams }: { searchParams: Promise
           </li>
         ))}
       </ul>
-      <section aria-labelledby="h-steps" className="mb-10 rounded-3xl bg-gradient-to-br from-navy-900 via-navy-700 to-cyan-700 p-6 text-white md:p-8">
-        <h2 id="h-steps" className="text-xl font-bold md:text-2xl">ขั้นตอนการทำงาน</h2>
-        <ol className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map(([icon, title, desc], i) => (
-            <li key={title} className="flex gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15">
-              <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-navy-700">
-                <Icon name={icon} />
-                <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-cyan-500 text-[11px] font-bold text-white">{i + 1}</span>
-              </span>
-              <span><span className="block font-bold">{title}</span><span className="block text-sm text-navy-100">{desc}</span></span>
-            </li>
-          ))}
+      <section aria-labelledby="h-steps" className="relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-navy-900 via-navy-700 to-cyan-700 p-6 text-white shadow-lg md:p-8">
+        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border-[28px] border-white/5" />
+        <div aria-hidden className="pointer-events-none absolute right-8 top-6 hidden grid-cols-6 gap-2 md:grid">{Array.from({ length: 18 }, (_, k) => <span key={k} className="h-1 w-1 rounded-full bg-white/40" />)}</div>
+        <h2 id="h-steps" className="relative text-xl font-bold md:text-2xl">ขั้นตอนการทำงาน</h2>
+        <span aria-hidden className="relative mt-2 block h-1 w-14 rounded-full bg-cyan-500" />
+        <ol className="relative mt-6 grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
+          {STEPS.flatMap(([icon, title, desc], i) => [
+            i > 0 && (
+              <li key={`a${i}`} aria-hidden className="grid place-items-center">
+                <span className="grid h-8 w-8 rotate-90 place-items-center rounded-full bg-white/15 ring-1 ring-white/40 lg:rotate-0">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                </span>
+              </li>
+            ),
+            <li key={title} className="relative flex items-center gap-3 rounded-2xl bg-white p-4 text-ink shadow-md">
+              <span className="absolute -left-2 -top-2 grid h-7 w-7 place-items-center rounded-full bg-cyan-600 text-sm font-bold text-white shadow ring-2 ring-white">{i + 1}</span>
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-cyan-100 text-navy-700"><Icon name={icon} /></span>
+              <span className="min-w-0"><span className="block font-bold text-navy-900">{title}</span><span className="block text-sm text-muted">{desc}</span></span>
+            </li>,
+          ])}
         </ol>
       </section>
       <h2 id="quote" className="mb-4 scroll-mt-40 text-2xl font-bold text-navy-900">ขอใบเสนอราคา / ปรึกษาโครงการ</h2>

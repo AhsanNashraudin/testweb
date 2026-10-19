@@ -41,7 +41,17 @@ export default async function About() {
             <Link href="/services#quote" className="btn-outline">ขอใบเสนอราคา</Link>
           </div>
         </div>
-        <div className="relative aspect-video overflow-hidden rounded-3xl"><Image src="/images/products/about1.jpg" alt="ข้อมูลบริษัท ENTECH: ก่อตั้ง 29 มีนาคม 2537 ทุนจดทะเบียน 47 ล้านบาท" fill sizes="(max-width:768px) 100vw, 600px" className="object-cover" /></div>
+        {/* ลูกค้าขอเอารูปอินโฟกราฟิกเดิมออก → แสดงสินค้าหลัก 4 หมวดแทน */}
+        <ul className="grid grid-cols-2 gap-3" aria-label="สินค้าหลัก">
+          {([['water-tanks', 'ถังเก็บน้ำ'], ['septic-tanks', 'ถังบำบัดน้ำเสีย'], ['fiberglass-doors', 'ประตูไฟเบอร์กลาส'], ['planters', 'กระถางไฟเบอร์กลาส']] as const).map(([slug, name]) => (
+            <li key={slug}>
+              <Link href={`/products/${slug}`} className="card group block overflow-hidden p-3 text-center transition hover:-translate-y-0.5 hover:shadow-md">
+                <span className="relative block aspect-square"><Image src={`/images/products/cat-${slug}.jpg`} alt={name} fill sizes="(max-width:768px) 45vw, 280px" className="object-contain transition group-hover:scale-105" /></span>
+                <span className="mt-1 block text-sm font-semibold text-navy-900">{name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

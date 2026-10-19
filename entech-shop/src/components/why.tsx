@@ -31,10 +31,16 @@ export function WhyBand({ title, items, children }: { title: string; items: Item
       <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
       <div className="relative">
         {title && <h2 id="h-why" className="text-2xl font-bold md:text-3xl">{title}</h2>}
-        <ul className={`grid gap-3 sm:grid-cols-2 md:gap-4 ${items.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} ${title ? 'mt-6' : ''}`}>
+        <ul className={`grid gap-3 sm:grid-cols-2 md:gap-4 ${items.length >= 4 ? 'lg:grid-cols-4 lg:gap-6' : 'lg:grid-cols-3 lg:gap-6'} ${title ? 'mt-6' : ''}`}>
           {items.map((w, i) => (
             // มือถือ: ไอคอนซ้าย ข้อความขวา (กระชับ) · จอใหญ่: ไอคอนบน
-            <li key={i} className="flex gap-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/15 sm:block sm:p-5">
+            <li key={i} className="relative flex gap-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/15 sm:block sm:p-5">
+              {/* ลูกศรเชื่อมกล่อง (จอใหญ่ · ไม่แสดงที่กล่องท้ายแถว) */}
+              {i < items.length - 1 && (i + 1) % (items.length >= 4 ? 4 : 3) !== 0 && (
+                <span aria-hidden className="absolute -right-[26px] top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white text-navy-700 shadow-md ring-2 ring-navy-700/20 lg:grid">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                </span>
+              )}
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-navy-700 shadow-md sm:h-12 sm:w-12"><WhyIcon i={i} /></span>
               <span className="block min-w-0">
                 <span className="block text-lg font-bold leading-snug sm:mt-4">{w.title}</span>

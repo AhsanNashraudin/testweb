@@ -14,11 +14,19 @@ NAMES = ['tank-cw-blue', 'tank-grand-stone', 'tank-natural-design', 'tank-polyte
          'amazon-sofa-2', 'florist', 'garden-log', 'septic-polytec-t', 'nano', 'grease-kg', 'grease-ku',
          'grease-set', 'wallbin-louver', 'wallbin-flat', 'tank_big', 'frp_septic', 'grease']  # planter: ภาพต้นฉบับซับซ้อน (ต้นไม้+พื้นหลังถนน) ตัดไม่ได้ ใช้ภาพเดิม รอภาพสตูดิโอ
 session = new_session('isnet-general-use')
+ROTATE = {'frp_septic': -3.5}  # องศา (ลบ = ตามเข็ม) — รูปต้นฉบับถ่ายเอียง
+U2NET = {'frp_septic'}  # รูปที่โมเดล u2net ตัดได้สะอาดกว่า
+_u2 = None
 
 
 def cut(name):
     img = Image.open(f'{ORIG}/{name}.jpg').convert('RGB')
-    rgba = remove(img, session=session, alpha_matting=False)
+    if name in ROTATE:
+        img = img.rotate(ROTATE[name], resample=Image.BICUBIC, expand=True, fillcolor=(255, 255, 255))
+    global _u2
+    if name in U2NET and _u2 is None:
+        _u2 = new_session('u2net')
+    rgba = remove(img, session=_u2 if name in U2NET else session, alpha_matting=False)
     alpha = rgba.getchannel('A').point(lambda v: 255 if v > 16 else 0)
     box = alpha.getbbox()
     if not box:

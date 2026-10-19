@@ -33,6 +33,7 @@ export const DEFAULT_HOME = {
     btn2Label: 'ขอใบเสนอราคา', btn2Href: '/services#quote',
     image: '/images/products/cat_tank.jpg', imageAlt: 'ถังเก็บน้ำ ENTECH ที่โรงงาน',
     imageSide: 'right' as 'right' | 'left',
+    showCerts: true, // โลโก้มาตรฐาน ISO 9001 และ มอก. ใต้ข้อความรอง
   },
   // ลำดับในรายการ = ลำดับบนหน้าเว็บ · title = หัวข้อที่แสดง (แถบปิดท้ายใช้หัวข้อใน cta)
   sections: ([

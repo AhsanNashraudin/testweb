@@ -17,7 +17,7 @@ const Search = ({ className = '' }: { className?: string }) => (
 export async function Header() {
   const CONTACT = await getContact();
   const TEL = CONTACT.tel;
-  const cats = (await getCategories()).map((c) => ({ href: `/products/${c.slug}`, label: c.name }));
+  const cats = (await getCategories()).map((c) => ({ href: `/products/${c.slug}`, label: c.name, image: c.image, desc: c.description }));
   return (
     <header className="relative z-40 bg-white shadow-sm md:sticky md:top-0">
       <div className="bg-navy-900 text-xs text-white">

@@ -140,3 +140,14 @@ test('ขอใบเสนอราคา', async ({ page }) => {
   await page.getByRole('button', { name: /ส่ง/ }).click();
   await expect(page.locator('body')).toContainText(/ขอบคุณ|ได้รับ/);
 });
+
+test('เมนูสินค้า: รายชื่อหมวดแนวตั้ง ชี้แล้วแสดงรูปรวมสินค้าของหมวด · หน้าแรกมีโลโก้มาตรฐาน', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('hero-certs')).toContainText('ISO 9001');
+  await page.locator('nav[aria-label="เมนูหลัก"] summary').click();
+  const menu = page.getByTestId('product-menu');
+  await menu.getByRole('link', { name: 'ประตูไฟเบอร์กลาส' }).hover();
+  await expect(menu.locator('img[src*="cat-fiberglass-doors"]').last()).toBeVisible();
+  await menu.getByRole('link', { name: 'ถังดักไขมัน' }).hover();
+  await expect(menu.getByText('ถังดักไขมันชนิดใต้ซิงค์').first()).toBeVisible();
+});

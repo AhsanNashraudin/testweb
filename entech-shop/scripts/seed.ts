@@ -69,9 +69,15 @@ async function main() {
     const catId = Object.fromEntries(existing.map((c) => [c.slug, c.id]));
     const have = new Set((await db.select({ slug: s.products.slug }).from(s.products)).map((p) => p.slug));
     const added = await insertProducts(PRODUCTS.filter((p) => !have.has(p.slug)), catId);
-    // หมวดกระถาง: เปลี่ยนรูปถ่ายเดิมเป็นรูปสินค้าตัดพื้นหลัง (เฉพาะถ้ายังเป็นรูปเดิม)
-    await db.update(s.categories).set({ image: '/images/products/cat-planters.jpg' })
-      .where(and(eq(s.categories.slug, 'planters'), eq(s.categories.image, '/images/products/planter.jpg')));
+    // รูปหมวด: เปลี่ยนเป็นรูปรวมสินค้า cat-<หมวด>.jpg (เฉพาะหมวดที่ยังใช้รูปตั้งต้นเดิม — รูปที่แอดมินเปลี่ยนเองไม่ถูกทับ)
+    const OLD_CAT_IMG: Record<string, string> = {
+      'water-tanks': 'tank-grand-stone', 'septic-tanks': 'septic-polytec-t', 'grease-traps': 'grease-set',
+      'fiberglass-doors': 'door-edm-13', 'wall-bins': 'wallbin-louver', 'fiberglass-water-tanks': 'frp_septic', planters: 'planter',
+    };
+    for (const [slug, old] of Object.entries(OLD_CAT_IMG)) {
+      await db.update(s.categories).set({ image: `/images/products/cat-${slug}.jpg` })
+        .where(and(eq(s.categories.slug, slug), eq(s.categories.image, `/images/products/${old}.jpg`)));
+    }
     const arts = await insertArticles();
     if (arts) console.log(`✓ เพิ่มบทความ ${arts} เรื่อง`);
     await syncAdmin();

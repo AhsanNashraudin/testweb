@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { LineIcon } from '@/components/line-icon';
 
-export type NavItem = { href: string; label: string };
+export type NavItem = { href: string; label: string; image?: string; desc?: string };
 const isActive = (path: string, href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
 
 /** <details> ที่ปิดตัวเองเมื่อเปลี่ยนหน้า / คลิกข้างนอก / กด Esc */
@@ -41,10 +42,7 @@ export function DesktopNav({ cats }: { cats: NavItem[] }) {
         <L href="/" label="หน้าแรก" />
         <details ref={ref} className="relative">
           <summary className={`${linkCls(prodOn)} flex list-none items-center gap-1 [&::-webkit-details-marker]:hidden`}>สินค้า <span aria-hidden>▾</span></summary>
-          <div className="absolute left-0 top-full z-50 mt-1 grid w-[520px] grid-cols-2 gap-1 rounded-xl bg-white p-3 text-ink shadow-xl">
-            <Link href="/products" className="rounded-lg px-3 py-2.5 font-semibold text-navy-700 hover:bg-navy-50">สินค้าทั้งหมด</Link>
-            {cats.map((c) => <Link key={c.href} href={c.href} aria-current={isActive(path, c.href) ? 'page' : undefined} className={`rounded-lg px-3 py-2.5 hover:bg-navy-50 ${isActive(path, c.href) ? 'bg-cyan-100 font-semibold' : ''}`}>{c.label}</Link>)}
-          </div>
+          <ProductMenu cats={cats} path={path} />
         </details>
         <L href="/services" label="บริการออกแบบระบบ" />
         <L href="/articles" label="บทความ" />
@@ -54,6 +52,38 @@ export function DesktopNav({ cats }: { cats: NavItem[] }) {
         <Link href="/services#quote" className="ml-auto whitespace-nowrap rounded-md bg-white px-4 py-2 font-semibold text-navy-700 hover:bg-cyan-100">ขอใบเสนอราคา</Link>
       </div>
     </nav>
+  );
+}
+
+/** เมนูสินค้า: รายชื่อหมวดเรียงแนวตั้งด้านซ้าย · ชี้/โฟกัสหมวดไหน ด้านขวาแสดงรูปรวมสินค้าและคำอธิบายของหมวดนั้น */
+function ProductMenu({ cats, path }: { cats: NavItem[]; path: string }) {
+  const current = Math.max(0, cats.findIndex((c) => isActive(path, c.href)));
+  const [i, setI] = useState(current);
+  const c = cats[i] ?? cats[0];
+  return (
+    <div className="absolute left-0 top-full z-50 mt-1 flex w-[760px] overflow-hidden rounded-2xl bg-white text-ink shadow-2xl ring-1 ring-slate-200" data-testid="product-menu">
+      <ul className="w-[300px] shrink-0 space-y-0.5 border-r border-slate-100 bg-slate-50 p-2">
+        <li><Link href="/products" className="block rounded-lg px-3 py-2.5 font-semibold text-navy-700 hover:bg-white">สินค้าทั้งหมด →</Link></li>
+        {cats.map((x, n) => (
+          <li key={x.href}>
+            <Link href={x.href} onMouseEnter={() => setI(n)} onFocus={() => setI(n)} aria-current={isActive(path, x.href) ? 'page' : undefined}
+              className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors ${n === i ? 'bg-white font-semibold text-navy-700 shadow-sm' : 'hover:bg-white'}`}>
+              {x.image && <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white ring-1 ring-slate-200"><Image src={x.image} alt="" fill sizes="40px" className="object-contain" /></span>}
+              <span className="min-w-0 flex-1">{x.label}</span>
+              <span aria-hidden className={n === i ? 'text-cyan-700' : 'text-transparent'}>›</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {c && (
+        <Link href={c.href} className="group flex flex-1 flex-col p-5" tabIndex={-1} aria-hidden>
+          <span className="text-lg font-bold text-navy-900">{c.label}</span>
+          {c.image && <span className="relative my-3 block aspect-[4/3] w-full"><Image src={c.image} alt="" fill sizes="420px" className="object-contain transition group-hover:scale-[1.03]" /></span>}
+          {c.desc && <span className="line-clamp-2 text-sm text-muted">{c.desc}</span>}
+          <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-lg bg-navy-700 px-4 py-2 text-sm font-semibold text-white group-hover:bg-navy-900">ดูสินค้าในหมวดนี้ →</span>
+        </Link>
+      )}
+    </div>
   );
 }
 
@@ -68,7 +98,10 @@ export function MobileMenu({ cats, phone, phoneHref, lineUrl }: { cats: NavItem[
       </summary>
       <nav aria-label="เมนูมือถือ" className="absolute inset-x-0 top-full z-50 max-h-[75vh] overflow-y-auto border-t border-slate-200 bg-white p-3 shadow-xl">
         {items.map((i) => (
-          <Link key={i.href} href={i.href} aria-current={isActive(path, i.href) ? 'page' : undefined} className={`block rounded-lg px-4 py-3 ${isActive(path, i.href) ? 'bg-cyan-100 font-semibold text-navy-700' : 'hover:bg-navy-50'}`}>{i.label}</Link>
+          <Link key={i.href} href={i.href} aria-current={isActive(path, i.href) ? 'page' : undefined} className={`flex items-center gap-3 rounded-lg px-4 ${i.image ? 'py-1.5 pl-6' : 'py-3'} ${isActive(path, i.href) ? 'bg-cyan-100 font-semibold text-navy-700' : 'hover:bg-navy-50'}`}>
+            {i.image && <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-white ring-1 ring-slate-200"><Image src={i.image} alt="" fill sizes="36px" className="object-contain" /></span>}
+            {i.label}
+          </Link>
         ))}
         <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
           <a href={phoneHref} className="btn-outline">โทร {phone}</a>
