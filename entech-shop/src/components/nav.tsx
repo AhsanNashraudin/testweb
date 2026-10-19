@@ -34,14 +34,20 @@ const linkCls = (on: boolean) => `block whitespace-nowrap rounded-md px-3 py-2.5
 /** เมนูหลักบนเดสก์ท็อป: หมวดสินค้ารวมใน dropdown เดียว เพื่อให้ทุกลิงก์อยู่ในจอ */
 export function DesktopNav({ cats }: { cats: NavItem[] }) {
   const { ref, path } = useAutoClose();
+  const hoverT = useRef<ReturnType<typeof setTimeout>>(undefined);
   const prodOn = path.startsWith('/product');
   const L = ({ href, label }: NavItem) => <Link href={href} className={linkCls(isActive(path, href))} aria-current={isActive(path, href) ? 'page' : undefined}>{label}</Link>;
   return (
     <nav aria-label="เมนูหลัก" className="hidden bg-navy-700 text-sm text-white md:block">
       <div className="container-x flex items-center gap-1 py-1">
         <L href="/" label="หน้าแรก" />
-        <details ref={ref} className="relative">
-          <summary className={`${linkCls(prodOn)} flex list-none items-center gap-1 [&::-webkit-details-marker]:hidden`}>สินค้า <span aria-hidden>▾</span></summary>
+        {/* เอาเมาส์ชี้ "สินค้า" = เปิดเมนูทันที (ยังกด/ใช้คีย์บอร์ดได้เหมือนเดิม) · ออกจากเมนูแล้วปิดเองหลังหน่วงสั้น ๆ */}
+        <details ref={ref} className="relative"
+          onMouseEnter={() => { clearTimeout(hoverT.current); if (ref.current) ref.current.open = true; }}
+          onMouseLeave={() => { hoverT.current = setTimeout(() => { if (ref.current) ref.current.open = false; }, 180); }}>
+          <summary className={`${linkCls(prodOn)} flex list-none items-center gap-1 [&::-webkit-details-marker]:hidden`}
+            // อุปกรณ์ที่มีเมาส์: เมนูเปิดจากการชี้อยู่แล้ว กดซ้ำไม่ให้ปิดทับ (ปิดด้วยการเลื่อนออก/คลิกข้างนอก/Esc)
+            onClick={(e) => { if (window.matchMedia('(hover: hover)').matches && ref.current?.open) e.preventDefault(); }}>สินค้า <span aria-hidden>▾</span></summary>
           <ProductMenu cats={cats} path={path} />
         </details>
         <L href="/services" label="บริการออกแบบระบบ" />
@@ -61,7 +67,7 @@ function ProductMenu({ cats, path }: { cats: NavItem[]; path: string }) {
   const [i, setI] = useState(current);
   const c = cats[i] ?? cats[0];
   return (
-    <div className="absolute left-0 top-full z-50 mt-1 flex w-[760px] overflow-hidden rounded-2xl bg-white text-ink shadow-2xl ring-1 ring-slate-200" data-testid="product-menu">
+    <div className="absolute left-0 top-full z-50 flex w-[760px] pt-1"><div className="flex w-full overflow-hidden rounded-2xl bg-white text-ink shadow-2xl ring-1 ring-slate-200" data-testid="product-menu">
       <ul className="w-[300px] shrink-0 space-y-0.5 border-r border-slate-100 bg-slate-50 p-2">
         <li><Link href="/products" className="block rounded-lg px-3 py-2.5 font-semibold text-navy-700 hover:bg-white">สินค้าทั้งหมด →</Link></li>
         {cats.map((x, n) => (
@@ -83,7 +89,7 @@ function ProductMenu({ cats, path }: { cats: NavItem[]; path: string }) {
           <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-lg bg-navy-700 px-4 py-2 text-sm font-semibold text-white group-hover:bg-navy-900">ดูสินค้าในหมวดนี้ →</span>
         </Link>
       )}
-    </div>
+    </div></div>
   );
 }
 

@@ -151,3 +151,15 @@ test('เมนูสินค้า: รายชื่อหมวดแนว
   await menu.getByRole('link', { name: 'ถังดักไขมัน' }).hover();
   await expect(menu.getByText('ถังดักไขมันชนิดใต้ซิงค์').first()).toBeVisible();
 });
+
+test('เมนูสินค้าเปิดเมื่อเอาเมาส์ชี้ และปิดเมื่อเลื่อนออก', async ({ page }) => {
+  await page.goto('/about');
+  const menu = page.getByTestId('product-menu');
+  await expect(menu).toBeHidden();
+  await page.locator('nav[aria-label="เมนูหลัก"] summary').hover();
+  await expect(menu).toBeVisible();
+  await menu.getByRole('link', { name: 'กระถางต้นไม้ไฟเบอร์กลาส' }).hover();
+  await expect(menu.locator('img[src*="cat-planters"]').last()).toBeVisible();
+  await page.mouse.move(5, 700);
+  await expect(menu).toBeHidden();
+});
