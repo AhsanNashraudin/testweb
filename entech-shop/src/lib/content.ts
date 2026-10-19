@@ -4,6 +4,7 @@ import 'server-only';
 import { cache } from 'react';
 import { eq } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
+import type { IconName } from '@/components/icons';
 
 export const DEFAULT_CONTACT = {
   company: 'บริษัท เอนเทค โพรดักส์ จำกัด', regNo: '0105537038071',
@@ -17,10 +18,10 @@ export const DEFAULT_CONTACT = {
 };
 export type Contact = typeof DEFAULT_CONTACT;
 
-export const SECTION_KEYS = ['categories', 'featured', 'why', 'articles', 'csr', 'cta'] as const;
+export const SECTION_KEYS = ['features', 'categories', 'featured', 'why', 'articles', 'csr', 'cta'] as const;
 export type SectionKey = (typeof SECTION_KEYS)[number];
 export const SECTION_LABEL: Record<SectionKey, string> = {
-  categories: 'หมวดหมู่สินค้า', featured: 'สินค้าแนะนำ', why: 'จุดเด่น (ทำไมต้องเรา)', articles: 'บทความล่าสุด', csr: 'กิจกรรม CSR ล่าสุด', cta: 'แถบปิดท้าย (ขอใบเสนอราคา)',
+  features: 'จุดเด่นบริการ (ไอคอน 6 ข้อ)', categories: 'หมวดหมู่สินค้า', featured: 'สินค้าแนะนำ', why: 'จุดเด่น (ทำไมต้องเรา)', articles: 'บทความล่าสุด', csr: 'กิจกรรม CSR ล่าสุด', cta: 'แถบปิดท้าย (ขอใบเสนอราคา)',
 };
 
 export const DEFAULT_HOME = {
@@ -37,9 +38,28 @@ export const DEFAULT_HOME = {
   },
   // ลำดับในรายการ = ลำดับบนหน้าเว็บ · title = หัวข้อที่แสดง (แถบปิดท้ายใช้หัวข้อใน cta)
   sections: ([
-    ['categories', 'หมวดหมู่สินค้า'], ['featured', 'สินค้าแนะนำ'], ['why', 'ทำไมต้อง ENTECH'], ['articles', 'บทความน่ารู้'], ['csr', 'กิจกรรมเพื่อสังคม (CSR)'], ['cta', ''],
+    ['features', 'ถังเก็บน้ำ ถังบำบัดน้ำเสีย ถังดักไขมัน BY ENTECH'], ['categories', 'หมวดหมู่สินค้า'], ['featured', 'สินค้าแนะนำ'], ['why', 'ทำไมต้อง ENTECH'], ['articles', 'บทความน่ารู้'], ['csr', 'กิจกรรมเพื่อสังคม (CSR)'], ['cta', ''],
   ] as [SectionKey, string][]).map(([key, title]) => ({ key, visible: true, title })),
   featuredCount: 8,
+  // ส่วนจุดเด่นบริการ (หัวข้อ = ชื่อส่วนในรายการ sections) · คำอธิบายใต้หัวข้อช่วย SEO
+  features: {
+    desc: 'ผู้ผลิตและจัดจำหน่ายถังเก็บน้ำ ถังบำบัดน้ำเสีย ถังดักไขมัน และประตูไฟเบอร์กลาส พร้อมบริการออกแบบและติดตั้งระบบบำบัดน้ำเสีย ภายใต้แบรนด์ ENTECH และ POLYTEC',
+    items: [
+      { icon: 'truck', title: 'จัดส่งสินค้าทั่วประเทศ', desc: 'กรุงเทพฯ ปริมณฑล และต่างจังหวัด ค่าส่งคำนวณอัตโนมัติตามจังหวัด หรือรับเองที่โรงงาน' },
+      { icon: 'award', title: 'สินค้ามาตรฐาน มอก.', desc: 'ผลิตภัณฑ์ได้รับมาตรฐาน มอก. 1379-2551, 816-2538 และ 435-2548' },
+      { icon: 'shield', title: 'รับประกันคุณภาพ', desc: 'ถังเก็บน้ำรับประกันสูงสุด 20 ปี พร้อมทีมงานดูแลหลังการขาย' },
+      { icon: 'headset', title: 'บริการให้คำปรึกษาฟรี', desc: 'ช่วยเลือกขนาดและรุ่นที่เหมาะกับบ้าน ร้านอาหาร อาคาร และโรงงาน' },
+      { icon: 'doc', title: 'ขอใบเสนอราคาฟรี', desc: 'ส่งรายละเอียดงานมา ทีมงานตอบกลับพร้อมใบเสนอราคา ไม่มีค่าใช้จ่าย' },
+      { icon: 'stopwatch', title: 'บริการรวดเร็วทันใจ', desc: 'ตอบคำถามทาง LINE และโทรศัพท์ในเวลาทำการ ผลิตและส่งมอบตรงเวลา' },
+    ] as { icon: IconName; title: string; desc: string }[],
+  },
+  // ส่วน "ทำไมต้อง ENTECH": คำโปรย + ตัวเลขเด่น
+  whyIntro: 'ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสียที่ลูกค้าบ้าน ร้านอาหาร และโรงงานไว้วางใจ ด้วยประสบการณ์กว่า 30 ปี',
+  whyStats: [
+    { value: '30+', label: 'ปีประสบการณ์' },
+    { value: '20 ปี', label: 'รับประกันสูงสุด' },
+    { value: '77', label: 'จังหวัดที่จัดส่ง' },
+  ],
   why: [
     { title: 'ผู้ผลิตโดยตรง', desc: 'ออกแบบและผลิตเองตั้งแต่ปี 2537 ราคาจากโรงงาน' },
     { title: 'มาตรฐาน มอก.', desc: 'ถัง PE และไฟเบอร์กลาสได้รับมาตรฐานผลิตภัณฑ์อุตสาหกรรม' },
@@ -72,13 +92,16 @@ export const getHome = cache(async (): Promise<Home> => {
   // หมวดที่ยังไม่อยู่ในรายการที่บันทึก (เช่น ส่วนใหม่ที่เพิ่มภายหลัง) ต่อท้ายให้อัตโนมัติ
   DEFAULT_HOME.sections.forEach((d, i) => {
     if (sections.some((x) => x.key === d.key)) return;
-    const after = sections.findIndex((x) => x.key === DEFAULT_HOME.sections[i - 1]?.key); // วางต่อจากส่วนที่อยู่ก่อนหน้าในค่าเริ่มต้น
-    sections.splice(after + 1 || sections.length, 0, d);
+    // ส่วนแรกของค่าเริ่มต้น → ไว้บนสุด · อื่น ๆ วางต่อจากส่วนที่อยู่ก่อนหน้าในค่าเริ่มต้น (ไม่พบ = ต่อท้าย)
+    const after = sections.findIndex((x) => x.key === DEFAULT_HOME.sections[i - 1]?.key);
+    sections.splice(i === 0 ? 0 : after === -1 ? sections.length : after + 1, 0, d);
   });
   return {
     ...DEFAULT_HOME, ...saved,
     hero: { ...DEFAULT_HOME.hero, ...saved.hero },
     cta: { ...DEFAULT_HOME.cta, ...saved.cta },
+    features: { ...DEFAULT_HOME.features, ...saved.features, items: Array.isArray(saved.features?.items) ? saved.features.items : DEFAULT_HOME.features.items },
+    whyStats: Array.isArray(saved.whyStats) ? saved.whyStats : DEFAULT_HOME.whyStats,
     why: Array.isArray(saved.why) ? saved.why : DEFAULT_HOME.why,
     sections,
   };

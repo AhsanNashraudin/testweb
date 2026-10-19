@@ -206,7 +206,7 @@ test('จัดการหน้าแรก: เปลี่ยนแบนเ
   await expect(hero.getByText('โปรโมชันเดือนนี้')).toBeVisible();
   await expect(hero.getByRole('link', { name: 'ดูถังเก็บน้ำ' })).toHaveAttribute('href', '/products/water-tanks');
   await expect(hero.locator('img').last()).toHaveAttribute('src', /media%2F\d+|\/media\/\d+/);
-  expect(await page.locator('[data-section]').evaluateAll((els) => els.map((e) => e.getAttribute('data-section')))).toEqual(['why', 'categories', 'featured', 'csr', 'cta']);
+  expect(await page.locator('[data-section]').evaluateAll((els) => els.map((e) => e.getAttribute('data-section')))).toEqual(['features', 'why', 'categories', 'featured', 'csr', 'cta']);
   await expect(page.getByText('ส่งไวทั่วไทย')).toBeVisible();
   // รูปที่อัปโหลดเปิดได้จริง
   const src = await page.locator('img[src*="media"]').first().getAttribute('src');

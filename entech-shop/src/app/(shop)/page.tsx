@@ -9,6 +9,7 @@ import { SITE_URL } from '@/lib/site';
 import { WhyBand } from '@/components/why';
 import { ArticleCards } from '@/components/article-list';
 import { LineIcon } from '@/components/line-icon';
+import { Icon } from '@/components/icons';
 
 // เนื้อหาหน้าแรกทั้งหมดแก้ได้ที่หลังบ้าน > จัดการหน้าแรก
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,6 +38,33 @@ export default async function Home() {
   const hero = h.hero;
 
   const blocks: Record<SectionKey, (title: string) => React.ReactNode> = {
+    // จุดเด่นบริการ: หัวข้อ H2 ใส่คำค้นหลัก + คำอธิบาย (ช่วย SEO) + ไอคอน 6 ข้อ
+    features: (title) => h.features.items.length > 0 && (
+      <section className="py-6" aria-labelledby="h-features">
+        <div className="container-x">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-navy-50 to-white px-5 py-10 ring-1 ring-navy-100 md:px-10">
+            <div aria-hidden className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-cyan-100/70 blur-2xl" />
+            <div aria-hidden className="pointer-events-none absolute -bottom-20 -right-10 h-56 w-56 rounded-full bg-cyan-100/60 blur-2xl" />
+            <div className="relative mx-auto max-w-3xl text-center">
+              {title && <h2 id="h-features" className="text-2xl font-bold text-cyan-700 md:text-3xl">{title}</h2>}
+              <span aria-hidden className="mx-auto mt-3 block h-1 w-16 rounded-full bg-gradient-to-r from-cyan-500 to-navy-700" />
+              {h.features.desc && <p className="mt-4 text-muted">{h.features.desc}</p>}
+            </div>
+            <ul className="relative mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+              {h.features.items.map((f) => (
+                <li key={f.title} className="group text-center">
+                  <span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-white text-cyan-600 shadow-md ring-1 ring-cyan-100 transition group-hover:-translate-y-1 group-hover:bg-gradient-to-br group-hover:from-cyan-600 group-hover:to-navy-700 group-hover:text-white">
+                    <Icon name={f.icon} className="h-10 w-10" />
+                  </span>
+                  <h3 className="mt-4 text-lg font-bold text-navy-900">{f.title}</h3>
+                  {f.desc && <p className="mx-auto mt-1 max-w-xs text-sm leading-relaxed text-muted">{f.desc}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    ),
     categories: (title) => cats.length > 0 && (
       <section className="container-x py-6">
         {title && <h2 className="mb-6 text-2xl font-bold text-navy-900">{title}</h2>}
@@ -62,7 +90,7 @@ export default async function Home() {
     ),
     why: (title) => h.why.length > 0 && (
       <section className="container-x py-6" aria-labelledby={title ? 'h-why' : undefined}>
-        <WhyBand title={title} items={h.why}>
+        <WhyBand title={title} items={h.why} intro={h.whyIntro} stats={h.whyStats}>
           <div className="mt-6 flex flex-wrap gap-3">
             <a href={contact.lineUrl} target="_blank" rel="noopener" className="btn-line"><LineIcon />ปรึกษาฟรีทาง LINE</a>
             <Link href="/services#quote" className="btn bg-white text-navy-700 hover:bg-cyan-100">ขอใบเสนอราคา</Link>

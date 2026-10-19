@@ -165,3 +165,13 @@ test('เมนูสินค้าเปิดเมื่อเอาเม�
   await page.mouse.move(5, 700);
   await expect(menu).toBeHidden();
 });
+
+test('หน้าแรก: ส่วนจุดเด่นบริการ (H2 + 6 ไอคอน) อยู่ก่อนหมวดสินค้า · ทำไมต้อง ENTECH มีตัวเลขเด่น', async ({ page }) => {
+  await page.goto('/');
+  const order = await page.locator('[data-section]').evaluateAll((els) => els.map((e) => e.getAttribute('data-section')));
+  expect(order.indexOf('features')).toBeLessThan(order.indexOf('categories'));
+  const feat = page.locator('[data-section=features]');
+  await expect(feat.getByRole('heading', { level: 2 })).toContainText('ถังเก็บน้ำ');
+  await expect(feat.getByRole('heading', { level: 3 })).toHaveCount(6);
+  await expect(page.locator('[data-section=why] dl')).toContainText('30+');
+});

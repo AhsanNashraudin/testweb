@@ -5,6 +5,7 @@ import { db, schema as s } from '@/db';
 import { requireAdmin, int, num, str } from '@/lib/admin';
 import { isProvince } from '@/lib/provinces';
 import { STATUS_TH, QUOTE_STATUS_TH } from '@/lib/status';
+import { ICON, type IconName } from '@/components/icons';
 import { DEFAULT_CONTACT, DEFAULT_HOME, SECTION_KEYS, safeHref, safeImage, type Home } from '@/lib/content';
 
 type Result = { ok?: string; err?: string } | null;
@@ -255,8 +256,17 @@ export async function saveHome(_prev: Result, form: FormData): Promise<Result> {
     const why = (Array.isArray(raw.why) ? raw.why : []).slice(0, 8)
       .map((w) => ({ title: t(w?.title, 60), desc: t(w?.desc, 200) })).filter((w) => w.title);
     const c = raw.cta ?? DEFAULT_HOME.cta;
+    const f = raw.features ?? DEFAULT_HOME.features;
+    const features = {
+      desc: t(f.desc, 400),
+      items: (Array.isArray(f.items) ? f.items : []).slice(0, 9)
+        .map((x) => ({ icon: (Object.hasOwn(ICON, x?.icon) ? x.icon : 'star') as IconName, title: t(x?.title, 60), desc: t(x?.desc, 200) }))
+        .filter((x) => x.title),
+    };
+    const whyStats = (Array.isArray(raw.whyStats) ? raw.whyStats : []).slice(0, 4)
+      .map((x) => ({ value: t(x?.value, 12), label: t(x?.label, 40) })).filter((x) => x.value);
     const home: Home = {
-      hero, sections, why,
+      hero, sections, why, features, whyStats, whyIntro: t(raw.whyIntro, 300),
       featuredCount: Math.min(16, Math.max(4, Math.round(Number(raw.featuredCount) / 4) * 4 || 8)),
       cta: { title: t(c.title, 120), desc: t(c.desc, 300), btnLabel: t(c.btnLabel, 40), btnHref: link(c.btnHref, 'ปุ่มแถบปิดท้าย'), showLine: c.showLine !== false },
       seoTitle: t(raw.seoTitle, 70), seoDesc: t(raw.seoDesc, 170),

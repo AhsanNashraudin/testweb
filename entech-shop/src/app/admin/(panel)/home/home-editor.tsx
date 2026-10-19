@@ -4,8 +4,10 @@ import { ActionForm, SubmitButton } from '@/components/action-form';
 import { ImagePicker } from '@/components/image-picker';
 import { saveHome } from '../actions';
 import type { Home, SectionKey } from '@/lib/content';
+import { Icon, ICON_LABEL, type IconName } from '@/components/icons';
 
 const SECTION_HELP: Record<SectionKey, string> = {
+  features: 'หัวข้อ (ใส่คำค้นหลักเพื่อ SEO) + คำอธิบาย + ไอคอนบริการ 6 ข้อ (แก้ได้ด้านล่าง)',
   categories: 'รูปและชื่อหมวดหมู่ทั้งหมด',
   featured: 'สินค้าที่ติ๊ก "สินค้าแนะนำหน้าแรก" ในหน้าแก้ไขสินค้า',
   why: 'กล่องข้อความจุดเด่นของบริษัท (แก้ข้อความได้ด้านล่าง)',
@@ -14,6 +16,7 @@ const SECTION_HELP: Record<SectionKey, string> = {
   cta: 'แถบสีน้ำเงินชวนขอใบเสนอราคา (แก้ข้อความได้ด้านล่าง)',
 };
 const SECTION_NAME: Record<SectionKey, string> = {
+  features: 'จุดเด่นบริการ',
   categories: 'หมวดหมู่สินค้า', featured: 'สินค้าแนะนำ', why: 'จุดเด่น', articles: 'บทความล่าสุด', csr: 'กิจกรรม CSR', cta: 'แถบปิดท้าย',
 };
 
@@ -155,11 +158,52 @@ export function HomeEditor({ initial, defaults, links }: { initial: Home; defaul
           </ol>
         </section>
 
+        {/* 2.5 จุดเด่นบริการ */}
+        <section className="card grid gap-3 p-5" aria-labelledby="s-feat">
+          <div>
+            <h2 id="s-feat" className="text-lg font-bold">จุดเด่นบริการ (ไอคอน)</h2>
+            <p className="text-sm text-muted">หัวข้อแก้ได้ที่ส่วนที่ 2 · ใส่คำที่ลูกค้าค้นใน Google เช่น &quot;ถังเก็บน้ำ ถังบำบัดน้ำเสีย&quot; ช่วยให้ค้นเจอง่ายขึ้น</p>
+          </div>
+          <Text label="คำอธิบายใต้หัวข้อ" rows={2} value={h.features.desc} max={400} onChange={(desc) => setH((x) => ({ ...x, features: { ...x.features, desc } }))} />
+          {h.features.items.map((it, i) => {
+            const set = (patch: Partial<typeof it>) => setH((x) => ({ ...x, features: { ...x.features, items: x.features.items.map((y, j) => (j === i ? { ...y, ...patch } : y)) } }));
+            return (
+              <div key={i} className="grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-[auto_1fr_2fr_auto] sm:items-end" data-testid="feature-row">
+                <label className="grid gap-1 text-sm">
+                  <span className="label mb-0">ไอคอน</span>
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-cyan-100 text-cyan-700"><Icon name={it.icon} className="h-5 w-5" /></span>
+                    <select value={it.icon} onChange={(e) => set({ icon: e.target.value as IconName })} className="input w-40 py-1.5" aria-label={`ไอคอนข้อ ${i + 1}`}>
+                      {Object.entries(ICON_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                    </select>
+                  </span>
+                </label>
+                <Text label={`ข้อ ${i + 1} — หัวข้อ`} value={it.title} max={60} onChange={(title) => set({ title })} />
+                <Text label="รายละเอียด" value={it.desc} max={200} onChange={(desc) => set({ desc })} />
+                <button type="button" onClick={() => setH((x) => ({ ...x, features: { ...x.features, items: x.features.items.filter((_, j) => j !== i) } }))} className="btn-danger min-h-10 px-3" aria-label={`ลบข้อ ${i + 1}`}>ลบ</button>
+              </div>
+            );
+          })}
+          {h.features.items.length < 9 && (
+            <button type="button" onClick={() => setH((x) => ({ ...x, features: { ...x.features, items: [...x.features.items, { icon: 'star', title: '', desc: '' }] } }))} className="btn-outline justify-self-start">+ เพิ่มข้อ</button>
+          )}
+        </section>
+
         {/* 3. จุดเด่น */}
         <section className="card grid gap-3 p-5" aria-labelledby="s-why">
           <div>
-            <h2 id="s-why" className="text-lg font-bold">3. จุดเด่น (กล่องข้อความ)</h2>
+            <h2 id="s-why" className="text-lg font-bold">3. ทำไมต้อง ENTECH (กล่องข้อความ)</h2>
             <p className="text-sm text-muted">สูงสุด 8 กล่อง · กล่องที่ไม่มีหัวข้อจะไม่แสดง</p>
+          </div>
+          <Text label="คำโปรยใต้หัวข้อ" rows={2} value={h.whyIntro} max={300} onChange={(whyIntro) => setH((x) => ({ ...x, whyIntro }))} />
+          <div className="grid gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-3">
+            {h.whyStats.map((s, i) => (
+              <div key={i} className="grid grid-cols-[5rem_1fr] gap-2">
+                <Text label={`ตัวเลข ${i + 1}`} value={s.value} max={12} onChange={(value) => setH((x) => ({ ...x, whyStats: x.whyStats.map((y, j) => (j === i ? { ...y, value } : y)) }))} />
+                <Text label="คำอธิบาย" value={s.label} max={40} onChange={(label) => setH((x) => ({ ...x, whyStats: x.whyStats.map((y, j) => (j === i ? { ...y, label } : y)) }))} />
+              </div>
+            ))}
+            <p className="text-xs text-muted sm:col-span-3">ตัวเลขเด่น เช่น 30+ ปีประสบการณ์ · เว้นตัวเลขว่าง = ไม่แสดงช่องนั้น</p>
           </div>
           {h.why.map((it, i) => (
             <div key={i} className="grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-[1fr_2fr_auto] sm:items-end">

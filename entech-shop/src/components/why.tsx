@@ -1,4 +1,5 @@
 /** จุดเด่น "ทำไมต้อง ENTECH" — ใช้ทั้งหน้าแรกและหน้าสินค้า (ข้อความแก้ได้ที่หลังบ้าน > จัดการหน้าแรก) */
+import Image from 'next/image';
 import { LineIcon } from '@/components/line-icon';
 
 type Item = { title: string; desc: string };
@@ -23,33 +24,46 @@ export function WhyIcon({ i, className = 'h-6 w-6' }: { i: number; className?: s
   );
 }
 
-/** แบบเต็มความกว้าง (หน้าแรก): พื้นไล่สีน้ำเงิน + การ์ดโปร่งพร้อมไอคอน */
-export function WhyBand({ title, items, children }: { title: string; items: Item[]; children?: React.ReactNode }) {
+/** แบบเต็มความกว้าง (หน้าแรก): ภาพโรงงานจริงเป็นพื้นหลัง + ซ้าย = หัวข้อ/ตัวเลขเด่น/ปุ่ม · ขวา = การ์ดขาว 2×2 */
+export function WhyBand({ title, items, intro, stats = [], children }: {
+  title: string; items: Item[]; intro?: string; stats?: { value: string; label: string }[]; children?: React.ReactNode;
+}) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-900 via-navy-700 to-cyan-700 p-6 text-white md:p-10">
-      <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-cyan-500/20 blur-2xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-      <div className="relative">
-        {title && <h2 id="h-why" className="text-2xl font-bold md:text-3xl">{title}</h2>}
-        <ul className={`grid gap-3 sm:grid-cols-2 md:gap-4 ${items.length >= 4 ? 'lg:grid-cols-4 lg:gap-6' : 'lg:grid-cols-3 lg:gap-6'} ${title ? 'mt-6' : ''}`}>
+    <div className="relative isolate overflow-hidden rounded-3xl text-white shadow-xl">
+      <Image src="/images/products/cat_tank.jpg" alt="" fill sizes="1200px" className="-z-20 object-cover" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-navy-900/95 via-navy-900/90 to-navy-700/90 lg:bg-gradient-to-r lg:to-navy-700/70" />
+      <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 -z-10 h-80 w-80 rounded-full border-[36px] border-cyan-500/15" />
+      <div className="grid gap-8 p-6 md:p-10 lg:grid-cols-[5fr_7fr] lg:items-center lg:gap-12">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cyan-100 ring-1 ring-cyan-500/40">
+            <WhyIcon i={7} className="h-3.5 w-3.5" /> Why ENTECH
+          </span>
+          {title && <h2 id="h-why" className="mt-3 text-3xl font-bold leading-tight md:text-4xl">{title}</h2>}
+          <span aria-hidden className="mt-3 block h-1 w-16 rounded-full bg-gradient-to-r from-cyan-500 to-line" />
+          {intro && <p className="mt-4 leading-relaxed text-navy-100">{intro}</p>}
+          {stats.length > 0 && (
+            <dl className="mt-6 grid grid-cols-3 gap-3">
+              {stats.map((s) => (
+                <div key={s.label} className="rounded-2xl bg-white/10 px-3 py-3 text-center ring-1 ring-white/15 backdrop-blur-sm">
+                  <dd className="text-2xl font-bold text-white md:text-3xl">{s.value}</dd>
+                  <dt className="mt-0.5 text-xs text-navy-100">{s.label}</dt>
+                </div>
+              ))}
+            </dl>
+          )}
+          {children}
+        </div>
+        <ul className="grid gap-3 sm:grid-cols-2 md:gap-4">
           {items.map((w, i) => (
-            // มือถือ: ไอคอนซ้าย ข้อความขวา (กระชับ) · จอใหญ่: ไอคอนบน
-            <li key={i} className="relative flex gap-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/15 sm:block sm:p-5">
-              {/* ลูกศรเชื่อมกล่อง (จอใหญ่ · ไม่แสดงที่กล่องท้ายแถว) */}
-              {i < items.length - 1 && (i + 1) % (items.length >= 4 ? 4 : 3) !== 0 && (
-                <span aria-hidden className="absolute -right-[26px] top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white text-navy-700 shadow-md ring-2 ring-navy-700/20 lg:grid">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
-                </span>
-              )}
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-navy-700 shadow-md sm:h-12 sm:w-12"><WhyIcon i={i} /></span>
-              <span className="block min-w-0">
-                <span className="block text-lg font-bold leading-snug sm:mt-4">{w.title}</span>
-                {w.desc && <span className="mt-1 block text-sm leading-relaxed text-navy-100">{w.desc}</span>}
-              </span>
+            <li key={i} className="group relative overflow-hidden rounded-2xl bg-white p-5 text-ink shadow-lg transition hover:-translate-y-1 hover:shadow-2xl">
+              <span aria-hidden className="absolute right-3 top-1 text-5xl font-bold text-navy-50 transition group-hover:text-cyan-100">{String(i + 1).padStart(2, '0')}</span>
+              <span className="relative grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cyan-600 to-navy-700 text-white shadow-md"><WhyIcon i={i} /></span>
+              <span className="relative mt-4 block text-lg font-bold leading-snug text-navy-900">{w.title}</span>
+              {w.desc && <span className="relative mt-1 block text-sm leading-relaxed text-muted">{w.desc}</span>}
+              <span aria-hidden className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-gradient-to-r from-cyan-500 to-navy-700 transition-transform group-hover:scale-x-100" />
             </li>
           ))}
         </ul>
-        {children}
       </div>
     </div>
   );
