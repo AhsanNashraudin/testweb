@@ -158,6 +158,8 @@ test('เมนูสินค้าเปิดเมื่อเอาเม�
   await expect(menu).toBeHidden();
   await page.locator('nav[aria-label="เมนูหลัก"] summary').hover();
   await expect(menu).toBeVisible();
+  await expect(menu.getByTestId('menu-preview')).toHaveCount(0); // ยังไม่ชี้ชื่อ = ยังไม่มีรูป
+  await expect(menu.locator('img')).toHaveCount(0);
   await menu.getByRole('link', { name: 'กระถางต้นไม้ไฟเบอร์กลาส' }).hover();
   await expect(menu.locator('img[src*="cat-planters"]').last()).toBeVisible();
   await page.mouse.move(5, 700);

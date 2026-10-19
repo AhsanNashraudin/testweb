@@ -63,18 +63,17 @@ export function DesktopNav({ cats }: { cats: NavItem[] }) {
 
 /** เมนูสินค้า: รายชื่อหมวดเรียงแนวตั้งด้านซ้าย · ชี้/โฟกัสหมวดไหน ด้านขวาแสดงรูปรวมสินค้าและคำอธิบายของหมวดนั้น */
 function ProductMenu({ cats, path }: { cats: NavItem[]; path: string }) {
-  const current = Math.max(0, cats.findIndex((c) => isActive(path, c.href)));
-  const [i, setI] = useState(current);
-  const c = cats[i] ?? cats[0];
+  // ยังไม่ชี้ชื่อไหน = แสดงแค่รายชื่อ · ชี้ชื่อหมวดแล้วรูปจึงขึ้นด้านขวา
+  const [i, setI] = useState(-1);
+  const c = cats[i];
   return (
-    <div className="absolute left-0 top-full z-50 flex w-[760px] pt-1"><div className="flex w-full overflow-hidden rounded-2xl bg-white text-ink shadow-2xl ring-1 ring-slate-200" data-testid="product-menu">
-      <ul className="w-[300px] shrink-0 space-y-0.5 border-r border-slate-100 bg-slate-50 p-2">
+    <div className="absolute left-0 top-full z-50 flex pt-1"><div className="flex overflow-hidden rounded-2xl bg-white text-ink shadow-2xl ring-1 ring-slate-200" data-testid="product-menu">
+      <ul className={`w-[280px] shrink-0 space-y-0.5 p-2 ${c ? 'border-r border-slate-100 bg-slate-50' : ''}`}>
         <li><Link href="/products" className="block rounded-lg px-3 py-2.5 font-semibold text-navy-700 hover:bg-white">สินค้าทั้งหมด →</Link></li>
         {cats.map((x, n) => (
           <li key={x.href}>
             <Link href={x.href} onMouseEnter={() => setI(n)} onFocus={() => setI(n)} aria-current={isActive(path, x.href) ? 'page' : undefined}
-              className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors ${n === i ? 'bg-white font-semibold text-navy-700 shadow-sm' : 'hover:bg-white'}`}>
-              {x.image && <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white ring-1 ring-slate-200"><Image src={x.image} alt="" fill sizes="40px" className="object-contain" /></span>}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${n === i ? 'bg-white font-semibold text-navy-700 shadow-sm' : 'hover:bg-white'}`}>
               <span className="min-w-0 flex-1">{x.label}</span>
               <span aria-hidden className={n === i ? 'text-cyan-700' : 'text-transparent'}>›</span>
             </Link>
@@ -82,7 +81,7 @@ function ProductMenu({ cats, path }: { cats: NavItem[]; path: string }) {
         ))}
       </ul>
       {c && (
-        <Link href={c.href} className="group flex flex-1 flex-col p-5" tabIndex={-1} aria-hidden>
+        <Link href={c.href} className="group flex w-[440px] flex-col p-5" tabIndex={-1} aria-hidden data-testid="menu-preview">
           <span className="text-lg font-bold text-navy-900">{c.label}</span>
           {c.image && <span className="relative my-3 block aspect-[4/3] w-full"><Image src={c.image} alt="" fill sizes="420px" className="object-contain transition group-hover:scale-[1.03]" /></span>}
           {c.desc && <span className="line-clamp-2 text-sm text-muted">{c.desc}</span>}
@@ -104,8 +103,7 @@ export function MobileMenu({ cats, phone, phoneHref, lineUrl }: { cats: NavItem[
       </summary>
       <nav aria-label="เมนูมือถือ" className="absolute inset-x-0 top-full z-50 max-h-[75vh] overflow-y-auto border-t border-slate-200 bg-white p-3 shadow-xl">
         {items.map((i) => (
-          <Link key={i.href} href={i.href} aria-current={isActive(path, i.href) ? 'page' : undefined} className={`flex items-center gap-3 rounded-lg px-4 ${i.image ? 'py-1.5 pl-6' : 'py-3'} ${isActive(path, i.href) ? 'bg-cyan-100 font-semibold text-navy-700' : 'hover:bg-navy-50'}`}>
-            {i.image && <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-white ring-1 ring-slate-200"><Image src={i.image} alt="" fill sizes="36px" className="object-contain" /></span>}
+          <Link key={i.href} href={i.href} aria-current={isActive(path, i.href) ? 'page' : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${i.image ? 'pl-7' : ''} ${isActive(path, i.href) ? 'bg-cyan-100 font-semibold text-navy-700' : 'hover:bg-navy-50'}`}>
             {i.label}
           </Link>
         ))}

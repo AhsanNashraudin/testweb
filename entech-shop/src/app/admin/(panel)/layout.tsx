@@ -8,7 +8,7 @@ import { logout } from '../login/actions';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: { default: 'หลังบ้าน', template: '%s | หลังบ้าน ENTECH' }, robots: { index: false } };
 
-const NAV = [['/admin', 'ภาพรวม'], ['/admin/orders', 'คำสั่งซื้อ'], ['/admin/quotes', 'ใบเสนอราคา'], ['/admin/home', 'จัดการหน้าแรก'], ['/admin/products', 'สินค้า'], ['/admin/articles', 'บทความ & CSR'], ['/admin/site', 'ข้อมูลร้าน & ติดต่อ'], ['/admin/shipping', 'ค่าจัดส่ง & การชำระเงิน']].map(([href, label]) => ({ href, label }));
+const NAV = [['/admin', 'ภาพรวม'], ['/admin/orders', 'คำสั่งซื้อ'], ['/admin/quotes', 'ใบเสนอราคา'], ['/admin/home', 'จัดการหน้าแรก'], ['/admin/products', 'สินค้า'], ['/admin/categories', 'หมวดสินค้า'], ['/admin/articles', 'บทความ & CSR'], ['/admin/site', 'ข้อมูลร้าน & ติดต่อ'], ['/admin/shipping', 'ค่าจัดส่ง & การชำระเงิน']].map(([href, label]) => ({ href, label }));
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const me = await requireAdmin();

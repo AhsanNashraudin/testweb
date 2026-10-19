@@ -265,3 +265,15 @@ export async function saveHome(_prev: Result, form: FormData): Promise<Result> {
       .onConflictDoUpdate({ target: s.settings.key, set: { value: JSON.stringify(home) } });
   }, 'บันทึกหน้าแรกแล้ว');
 }
+
+// ---------- หมวดสินค้า ----------
+export async function saveCategory(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const id = int(form.get('id'), 1);
+    const name = str(form.get('name'), 80);
+    if (name.length < 2) throw new Error('กรุณาใส่ชื่อหมวด');
+    const image = safeImage(str(form.get('image')));
+    if (!image) throw new Error('กรุณาเลือกรูปหมวด');
+    await db.update(s.categories).set({ name, description: str(form.get('description'), 400), image }).where(eq(s.categories.id, id));
+  }, 'บันทึกหมวดแล้ว — เมนูและหน้าแรกเปลี่ยนตามทันที');
+}

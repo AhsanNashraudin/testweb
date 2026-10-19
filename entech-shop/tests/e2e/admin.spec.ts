@@ -235,3 +235,20 @@ test('ข้อมูลร้าน & ติดต่อ: แก้ครั้
   await expect(page.locator('footer')).toContainText('@entechnew');
   await expect(page.locator('main')).toContainText('089-999-8888');
 });
+
+test('หมวดสินค้า: เปลี่ยนรูปและชื่อหมวดในหลังบ้าน → เมนูสินค้าแสดงรูปใหม่เมื่อชี้', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/categories');
+  const form = page.getByTestId('category-form').nth(4); // ถังขยะฝังกำแพง (ลำดับที่ 5)
+  await expect(form.getByLabel('ชื่อหมวด')).toHaveValue('ถังขยะฝังกำแพง');
+  await form.locator('input[type=file]').setInputFiles('public/images/products/wallbin-flat.jpg');
+  await expect(form.locator('img[src^="/media/"]')).toBeVisible();
+  await form.getByLabel('ชื่อหมวด').fill('ถังขยะฝังผนัง');
+  await form.getByRole('button', { name: 'บันทึก' }).click();
+  await expect(form.getByTestId('flash-ok')).toBeVisible();
+  await page.goto('/');
+  await page.locator('nav[aria-label="เมนูหลัก"] summary').hover();
+  const menu = page.getByTestId('product-menu');
+  await menu.getByRole('link', { name: 'ถังขยะฝังผนัง' }).hover();
+  await expect(menu.getByTestId('menu-preview').locator('img')).toHaveAttribute('src', /media/);
+});
