@@ -39,6 +39,7 @@ async function insertArticles() {
     const patch: Partial<typeof s.articles.$inferInsert> = {};
     if (a.kind === 'csr' && cur.kind === 'article') patch.kind = 'csr';
     if (a.image && !cur.image) patch.image = a.image;
+    if (a.image && cur.image === a.image.replace('-v2.jpg', '.jpg')) patch.image = a.image; // รูปปกรุ่นใหม่ (ชื่อไฟล์ใหม่กัน cache)
     if (cur.body.includes('\n• ') && !cur.body.includes(' | ') && a.body.includes(' | ')) patch.body = a.body; // รายการ → ตาราง
     for (const [o, n] of TEXT_FIXES) if ((patch.body ?? cur.body).includes(o)) patch.body = (patch.body ?? cur.body).replace(o, n);
     if (Object.keys(patch).length) await db.update(s.articles).set(patch).where(eq(s.articles.id, cur.id));
@@ -53,7 +54,11 @@ const TEXT_FIXES: [string, string][] = [
 ];
 const SETTING_FIXES: [string, string, string][] = [
   ['contact', '02-813-0971-5', '02-813-0971-4'],
-  ['home', '"image":"/images/products/cat_tank.jpg"', '"image":"/images/hero-products.webp","imageFit":"contain"'],
+  ['home', '"image":"/images/products/cat_tank.jpg"', '"image":"/images/hero-studio.webp","imageFit":"contain"'],
+  ['home', '"image":"/images/hero-products.webp"', '"image":"/images/hero-studio.webp"'],
+  ['home', '"image":"/images/hero-studio.webp","imageFit":"contain"', '"image":"/images/hero-scene-v3.webp","imageFit":"scene"'],
+  ['home', '"image":"/images/hero-scene.webp"', '"image":"/images/hero-scene-v3.webp"'],
+  ['home', '"image":"/images/hero-scene-v2.webp"', '"image":"/images/hero-scene-v3.webp"'],
   ['home', '"imageAlt":"ถังเก็บน้ำ ENTECH ที่โรงงาน"', '"imageAlt":"ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC"'],
   ['home', 'ถังเก็บน้ำรับประกันสูงสุด 20 ปี พร้อมทีมงานดูแลหลังการขาย', 'รับประกัน 20 ปี ภายใต้เงื่อนไขการรับประกันของบริษัท ตามข้อกำหนดและเงื่อนไขการรับประกัน'],
 ];
@@ -93,9 +98,12 @@ async function main() {
       'water-tanks': 'tank-grand-stone', 'septic-tanks': 'septic-polytec-t', 'grease-traps': 'grease-set',
       'fiberglass-doors': 'door-edm-13', 'wall-bins': 'wallbin-louver', 'fiberglass-water-tanks': 'frp_septic', planters: 'planter',
     };
+    // รูปหมวดชุดสตูดิโอ (cat-<หมวด>-studio.jpg) แทนรูปตั้งต้นรุ่นก่อน ๆ — ชื่อไฟล์ใหม่ = ไม่ติด cache รูปเก่า
     for (const [slug, old] of Object.entries(OLD_CAT_IMG)) {
-      await db.update(s.categories).set({ image: `/images/products/cat-${slug}.jpg` })
-        .where(and(eq(s.categories.slug, slug), eq(s.categories.image, `/images/products/${old}.jpg`)));
+      for (const prev of [`/images/products/${old}.jpg`, `/images/products/cat-${slug}.jpg`]) {
+        await db.update(s.categories).set({ image: `/images/products/cat-${slug}-studio.jpg` })
+          .where(and(eq(s.categories.slug, slug), eq(s.categories.image, prev)));
+      }
     }
     const arts = await insertArticles();
     await fixSettings();

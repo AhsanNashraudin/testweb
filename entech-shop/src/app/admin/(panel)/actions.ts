@@ -231,7 +231,7 @@ export async function saveHome(_prev: Result, form: FormData): Promise<Result> {
       btn1Label: t(h.btn1Label, 40), btn1Href: link(h.btn1Href, 'ปุ่มที่ 1'),
       btn2Label: t(h.btn2Label, 40), btn2Href: link(h.btn2Href, 'ปุ่มที่ 2'),
       image, imageAlt: t(h.imageAlt, 120) || 'ENTECH', imageSide: h.imageSide === 'left' ? 'left' as const : 'right' as const,
-      imageFit: h.imageFit === 'cover' ? 'cover' as const : 'contain' as const,
+      imageFit: (['scene', 'contain', 'cover'] as const).find((f) => f === h.imageFit) ?? 'cover',
       showCerts: h.showCerts !== false,
       certImage: safeImage(t(h.certImage)),
     };

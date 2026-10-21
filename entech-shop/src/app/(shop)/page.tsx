@@ -147,7 +147,12 @@ export default async function Home() {
               {hero.btn2Label && hero.btn2Href && <Link href={hero.btn2Href} className="btn-outline">{hero.btn2Label}</Link>}
             </div>
           </div>
-          {hero.imageFit === 'contain' ? (
+          {hero.imageFit === 'scene' ? (
+            // ภาพฉากเต็ม: ไม่มีกรอบ ขอบทุกด้านค่อย ๆ จาง (ซ้ายจางมากสุด) ให้ภาพกลืนกับพื้นหลังของแบนเนอร์ (แบบตัวอย่างของลูกค้า)
+            <div className="relative aspect-[4/3] [mask-image:linear-gradient(to_right,transparent,black_9%,black_97%,transparent),linear-gradient(to_bottom,transparent,black_12%,black_86%,transparent)] [mask-composite:intersect] md:-mr-8" data-testid="hero-image">
+              <Image src={hero.image} alt={hero.imageAlt} fill priority sizes="(max-width:768px) 100vw, 680px" className="object-cover" />
+            </div>
+          ) : hero.imageFit === 'contain' ? (
             <div className="relative aspect-[4/3]" data-testid="hero-image">
               {/* แสงฟุ้งด้านหลังสินค้า ให้ภาพดูมีมิติ */}
               <div aria-hidden className="absolute inset-x-[6%] bottom-[4%] top-[8%] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.95),rgba(207,232,247,0.6)_55%,transparent)]" />

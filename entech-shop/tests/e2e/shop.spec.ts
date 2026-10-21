@@ -143,7 +143,7 @@ test('ขอใบเสนอราคา', async ({ page }) => {
 
 test('หน้าแรก: รูปปกสินค้าจริง + กดการ์ด มอก. เปิดใบอนุญาตในป๊อปอัป (Esc ปิด) · ISO กดไม่ได้', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByTestId('hero-image').locator('img')).toHaveAttribute('src', /hero-products/);
+  await expect(page.getByTestId('hero-image').locator('img')).toHaveAttribute('src', /hero-scene/);
   await expect(page.locator('header')).toContainText('02-813-0971-4');
   const certs = page.getByTestId('hero-certs');
   await expect(certs.getByRole('button')).toHaveCount(1);

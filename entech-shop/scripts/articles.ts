@@ -9,7 +9,7 @@ export const ARTICLES: SeedArticle[] = [
     slug: 'water-tank-size-guide',
     title: 'เลือกขนาดถังเก็บน้ำให้พอดีกับจำนวนคนในบ้าน',
     excerpt: 'ตารางเทียบขนาดถัง 700–5,000 ลิตร กับจำนวนผู้ใช้ในบ้านและสำนักงาน พร้อมขนาดพื้นที่ที่ต้องเตรียม',
-    publishedAt: '2026-10-01', image: '/images/articles/water-tank-size-guide.jpg',
+    publishedAt: '2026-10-01', image: '/images/articles/water-tank-size-guide-v2.jpg',
     body: `ถังเก็บน้ำที่เล็กเกินไปทำให้น้ำหมดก่อนน้ำประปาไหลเข้ามาเติม ส่วนถังที่ใหญ่เกินไปทำให้น้ำค้างในถังนานและเสียพื้นที่ วิธีที่ง่ายที่สุดคือเลือกตามจำนวนคนที่ใช้น้ำจริง
 
 ตัวเลขด้านล่างมาจากตารางสเปกถังเก็บน้ำ GRAND STONE (รุ่น CW-G) ของ ENTECH

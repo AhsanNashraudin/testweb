@@ -32,10 +32,11 @@ export const DEFAULT_HOME = {
     sub: 'สั่งออนไลน์ได้ทันที ค่าส่งคำนวณอัตโนมัติ ส่งทั่วประเทศ หรือรับเองที่โรงงาน',
     btn1Label: 'เลือกซื้อสินค้า', btn1Href: '/products',
     btn2Label: 'ขอใบเสนอราคา', btn2Href: '/services#quote',
-    image: '/images/hero-products.webp', imageAlt: 'ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC',
+    image: '/images/hero-scene-v3.webp', imageAlt: 'ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC ตั้งบนลานหน้าอาคาร',
     imageSide: 'right' as 'right' | 'left',
+    // scene = ภาพฉากเต็ม ขอบซ้ายค่อย ๆ จางกลืนกับพื้นหลัง (ภาพจากลูกค้า ครอป 4:3 + เพิ่มความคม)
     // contain = รูปสินค้าพื้นใส วางลอยบนพื้นหลัง (scripts/make-hero.py) · cover = ภาพถ่ายเต็มกรอบมุมมน
-    imageFit: 'contain' as 'contain' | 'cover',
+    imageFit: 'scene' as 'scene' | 'contain' | 'cover',
     showCerts: true, // โลโก้มาตรฐาน ISO 9001 และ มอก. ใต้ข้อความรอง
     certImage: '/images/cert-tis-1568.jpg', // รูปที่ขึ้นเมื่อกดการ์ด มอก. (เว้นว่าง = กดไม่ได้)
   },

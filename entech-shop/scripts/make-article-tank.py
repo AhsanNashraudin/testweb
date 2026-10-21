@@ -1,5 +1,5 @@
 """รูปปกบทความ "เลือกขนาดถังเก็บน้ำ" — ใช้รูปถังจริง (CW1000CS) + ไอคอนการใช้น้ำในบ้าน (ไม่มีภาพคน/ภาพ AI)
-ผลลัพธ์: public/images/articles/water-tank-size-guide.jpg (1200×800 · เนื้อหาสำคัญอยู่ในแถบกลาง 16:9 สำหรับการ์ดบทความ)
+ผลลัพธ์: public/images/articles/water-tank-size-guide-v2.jpg (1200×800 · เนื้อหาสำคัญอยู่ในแถบกลาง 16:9 สำหรับการ์ดบทความ)
 ใช้: python3 scripts/make-article-tank.py
 """
 import base64, io
@@ -65,5 +65,5 @@ for label, x, y in LABELS:
     w = d.textlength(label, font=font)
     d.rounded_rectangle((x, y - 26, x + w + 44, y + 26), radius=26, fill=(15, 39, 71))
     d.text((x + 22, y + 1), label, font=font, fill='white', anchor='lm')
-img.save('public/images/articles/water-tank-size-guide.jpg', quality=86, optimize=True)
+img.save('public/images/articles/water-tank-size-guide-v2.jpg', quality=86, optimize=True)
 print('✓ water-tank-size-guide.jpg')

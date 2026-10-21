@@ -105,7 +105,7 @@ export function HomeEditor({ initial, defaults, links }: { initial: Home; defaul
               <fieldset>
                 <legend className="label">รูปแบบรูป</legend>
                 <div className="flex gap-2">
-                  {([['contain', 'รูปสินค้าพื้นใส (ลอยบนพื้นหลัง)'], ['cover', 'ภาพถ่ายเต็มกรอบ']] as const).map(([fit, label]) => (
+                  {([['scene', 'ภาพฉากเต็ม (ขอบซ้ายจางกลืนพื้นหลัง)'], ['contain', 'รูปสินค้าพื้นใส'], ['cover', 'ภาพถ่ายเต็มกรอบ']] as const).map(([fit, label]) => (
                     <label key={fit} className={`flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 p-2.5 text-center text-sm font-semibold ${h.hero.imageFit === fit ? 'border-navy-700 bg-navy-50' : 'border-slate-200'}`}>
                       <input type="radio" name="imageFit" className="sr-only" checked={h.hero.imageFit === fit} onChange={() => hero({ imageFit: fit })} />
                       {label}

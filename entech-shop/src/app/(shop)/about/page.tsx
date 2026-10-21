@@ -63,7 +63,7 @@ export default async function About() {
             {([['water-tanks', 'ถังเก็บน้ำ'], ['septic-tanks', 'ถังบำบัดน้ำเสีย'], ['fiberglass-doors', 'ประตูไฟเบอร์กลาส'], ['planters', 'กระถางไฟเบอร์กลาส']] as const).map(([slug, name]) => (
               <li key={slug}>
                 <Link href={`/products/${slug}`} className="card group block overflow-hidden p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-500 hover:shadow-md">
-                  <span className="relative block aspect-square"><Image src={`/images/products/cat-${slug}.jpg`} alt={name} fill sizes="(max-width:768px) 45vw, 280px" className="object-contain transition group-hover:scale-105" /></span>
+                  <span className="relative block aspect-square"><Image src={`/images/products/cat-${slug}-studio.jpg`} alt={name} fill sizes="(max-width:768px) 45vw, 280px" className="object-contain transition group-hover:scale-105" /></span>
                   <span className="mt-1 block text-sm font-semibold text-navy-900">{name}</span>
                 </Link>
               </li>

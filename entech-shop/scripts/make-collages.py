@@ -1,10 +1,12 @@
-"""รูปรวมสินค้าประจำหมวด (สินค้าเรียงแถวเดียว ซ้อนกันเล็กน้อยให้ดูมีมิติ — ชิ้นกลางอยู่หน้าสุด) → public/images/products/cat-<หมวด>.jpg
+"""รูปรวมสินค้าประจำหมวด (สินค้าเรียงแถวเดียว ซ้อนกันเล็กน้อยให้ดูมีมิติ — ชิ้นกลางอยู่หน้าสุด) → public/images/products/cat-<หมวด>-studio.jpg (เปลี่ยนชื่อไฟล์เมื่อแก้รูป เพื่อไม่ให้ cache รูปเก่า)
 ใช้ในหน้าแรก (หมวดหมู่) และเมนูสินค้า · อ่านรูปสินค้าที่ตัดพื้นหลังแล้วใน public/images/products
 รัน: python3 scripts/make-collages.py [หมวด ...]"""
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 from rembg import remove, new_session
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from studio import grade, backdrop, contact_shadow  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'public/images/products'
@@ -17,12 +19,11 @@ SETS = {
     # ประตูมี 20 แบบ → เลือก 5 แบบที่สี/ลายต่างกันชัด (ลูกค้าขอ "เลือกมา 5 อันแล้วเรียงกัน")
     'fiberglass-doors': [f'door-{c}' for c in ['edp-03', 'edp-06', 'edp-04', 'edp-07', 'edm-13']],
     'wall-bins': ['wallbin-flat', 'wallbin-louver'],
-    'fiberglass-water-tanks': ['tank_big', 'frp_septic'],
+    'fiberglass-water-tanks': ['frp_septic'],  # ลูกค้าขอเอาถังเก็บน้ำไฟเบอร์กลาส (tank_big) ออกจากรูปหมวด
     # กระถาง: แถวหลังทรงสูง/ทรงยาว แถวหน้าทรงชาม (แนวทางจากรูปตัวอย่างของลูกค้า)
     'planters': {'back': ['planter-trough', 'planter-square-set'], 'front': ['planter-round', 'planter-bowl-pond', 'planter-low-bowl']},
 }
-# หมวดที่ลูกค้าสั่งไม่ให้แก้ (รันแบบไม่ระบุหมวดจะข้าม)
-SKIP_DEFAULT = {'fiberglass-water-tanks'}
+SKIP_DEFAULT: set[str] = set()
 session = new_session('isnet-general-use')
 
 
@@ -30,17 +31,15 @@ def obj(name):
     png = ROOT / f'assets/product-originals/{name}.png'  # ต้นฉบับที่มีพื้นโปร่งใสอยู่แล้ว (กระถางจากลูกค้า) ใช้ได้เลย
     if png.exists():
         im = Image.open(png).convert('RGBA')
-        return im.crop(im.getchannel('A').getbbox())
+        return grade(im.crop(im.getchannel('A').getbbox()))
     rgba = remove(Image.open(SRC / f'{name}.jpg').convert('RGB'), session=session)
     a = rgba.getchannel('A').point(lambda v: 255 if v > 40 else 0)
     rgba.putalpha(a)
-    return rgba.crop(a.getbbox())
+    return grade(rgba.crop(a.getbbox()))
 
 
 def place(canvas, im, x, base):
-    sh = Image.new('L', (S, S), 0)
-    ImageDraw.Draw(sh).ellipse((x + im.width * 0.04, base - 7, x + im.width * 0.96, base + 9), fill=70)
-    canvas.paste((0, 0, 0, 255), (0, 0), sh.filter(ImageFilter.GaussianBlur(7)))
+    contact_shadow(canvas, x, base, im.width)
     canvas.alpha_composite(im, (int(x), int(base - im.height)))
 
 
@@ -63,7 +62,7 @@ def lineup(items, width, max_h, overlap=0.18, edge=0.86):
 
 def collage(spec):
     """สินค้าเรียงแถวเดียวเต็มกรอบ (ลูกค้าขอให้สินค้าใหญ่ขึ้น เรียงกัน) · กระถาง = 2 แถว หน้า-หลัง"""
-    canvas = Image.new('RGBA', (S, S), (255, 255, 255, 255))
+    canvas = backdrop(S, S, horizon=0.66)  # ฉากสตูดิโอเดียวกันทุกหมวด
     if isinstance(spec, dict):
         back = lineup([obj(n) for n in spec['back']], S * 0.86, S * 0.5, overlap=0.06, edge=1)
         front = lineup([obj(n) for n in spec['front']], S * 0.96, S * 0.36, overlap=0.12, edge=0.92)
@@ -72,7 +71,7 @@ def collage(spec):
         for im, x, _ in sorted(front, key=lambda t: t[2]):
             place(canvas, im, x, S * 0.90)
         return canvas.convert('RGB')
-    row = lineup([obj(n) for n in spec], S * 0.94, S * 0.78, overlap=0.28 if len(spec) > 2 else 0.12)
+    row = lineup([obj(n) for n in spec], S * 0.94, S * (0.72 if len(spec) == 1 else 0.78), overlap=0.28 if len(spec) > 2 else 0.12)
     # ชิ้นทรงเตี้ย-กว้าง (เช่น ถังดักไขมัน) ไม่ชิดขอบล่าง: จัดกลุ่มให้อยู่กึ่งกลางแนวตั้ง
     tallest = max(im.height for im, _, _ in row)
     base0 = min(S * 0.88, (S + tallest) / 2 + S * 0.04)
@@ -83,5 +82,5 @@ def collage(spec):
 
 if __name__ == '__main__':
     for cat in sys.argv[1:] or [c for c in SETS if c not in SKIP_DEFAULT]:
-        collage(SETS[cat]).save(SRC / f'cat-{cat}.jpg', quality=86, optimize=True)
+        collage(SETS[cat]).save(SRC / f'cat-{cat}-studio.jpg', quality=86, optimize=True)
         print('✓', cat, flush=True)
