@@ -4,7 +4,8 @@ import { and, eq, ne, sql } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { requireAdmin, int, num, str } from '@/lib/admin';
 import { isProvince } from '@/lib/provinces';
-import { STATUS_TH, QUOTE_STATUS_TH } from '@/lib/status';
+import { QUOTE_STATUS_TH } from '@/lib/status';
+import { updateOrder } from '@/lib/orders';
 import { ICON, type IconName } from '@/components/icons';
 import { DEFAULT_CONTACT, DEFAULT_HOME, SECTION_KEYS, safeHref, safeImage, type Home } from '@/lib/content';
 
@@ -26,25 +27,8 @@ async function run(fn: () => Promise<string | void>, okMsg = 'บันทึก
 export async function updateOrderStatus(_prev: Result, form: FormData): Promise<Result> {
   const id = int(form.get('id'), 1);
   return run(async () => {
-    const status = str(form.get('status'));
-    if (!Object.hasOwn(STATUS_TH, status)) throw new Error('สถานะไม่ถูกต้อง');
-    await db.transaction(async (tx) => {
-      // อ่านสถานะเดิมภายใน transaction เดียวกัน กันกดซ้ำแล้วคืนสต็อกสองรอบ
-      const [o] = await tx.select().from(s.orders).where(eq(s.orders.id, id));
-      if (!o) throw new Error('ไม่พบคำสั่งซื้อ');
-      // ยกเลิกคำสั่งซื้อ → คืนสต็อก (ทำครั้งเดียว), กลับมาใช้งาน → ตัดสต็อกอีกครั้ง
-      if ((status === 'cancelled') !== (o.status === 'cancelled')) {
-        const items = await tx.select().from(s.orderItems).where(eq(s.orderItems.orderId, id));
-        for (const it of items) {
-          const [v] = await tx.select().from(s.variants).where(eq(s.variants.id, it.variantId));
-          if (!v) continue;
-          const stock = status === 'cancelled' ? v.stock + it.qty : v.stock - it.qty;
-          if (stock < 0) throw new Error(`สต็อก ${it.sku} ไม่พอสำหรับเปิดคำสั่งซื้อนี้อีกครั้ง`);
-          await tx.update(s.variants).set({ stock }).where(eq(s.variants.id, v.id));
-        }
-      }
-      await tx.update(s.orders).set({ status: status as typeof o.status }).where(eq(s.orders.id, id));
-    });
+    const opt = (k: string) => (form.has(k) ? str(form.get(k), 500) : undefined);
+    await updateOrder(id, { status: str(form.get('status')), carrier: opt('carrier'), trackingNo: opt('trackingNo'), trackingUrl: opt('trackingUrl') });
   });
 }
 
@@ -247,7 +231,9 @@ export async function saveHome(_prev: Result, form: FormData): Promise<Result> {
       btn1Label: t(h.btn1Label, 40), btn1Href: link(h.btn1Href, 'ปุ่มที่ 1'),
       btn2Label: t(h.btn2Label, 40), btn2Href: link(h.btn2Href, 'ปุ่มที่ 2'),
       image, imageAlt: t(h.imageAlt, 120) || 'ENTECH', imageSide: h.imageSide === 'left' ? 'left' as const : 'right' as const,
+      imageFit: h.imageFit === 'cover' ? 'cover' as const : 'contain' as const,
       showCerts: h.showCerts !== false,
+      certImage: safeImage(t(h.certImage)),
     };
     if (!hero.title) throw new Error('กรุณาใส่หัวข้อหลักของแบนเนอร์');
     const sections = (Array.isArray(raw.sections) ? raw.sections : [])

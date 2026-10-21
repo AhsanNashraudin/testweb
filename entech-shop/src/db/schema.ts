@@ -123,7 +123,13 @@ export const orders = sqliteTable('orders', {
   vat: integer('vat').notNull().default(0), // VAT 7% ที่บวกเพิ่ม (กรณีราคาสินค้ายังไม่รวม VAT)
   total: integer('total').notNull(),
   weightKg: real('weight_kg').notNull().default(0),
+  // ติดตามพัสดุ (กรอกจากหลังบ้าน หรือระบบสต็อกผ่าน API) — แสดงให้ลูกค้าเห็นในหน้าคำสั่งซื้อ
+  carrier: text('carrier').notNull().default(''),
+  trackingNo: text('tracking_no').notNull().default(''),
+  trackingUrl: text('tracking_url').notNull().default(''),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(now()),
+  // เวลาแก้ล่าสุด (unix วินาที, 0 = ยังไม่เคยแก้) — ใช้ให้ระบบสต็อกดึงเฉพาะที่เปลี่ยน · SQLite เพิ่มคอลัมน์ที่ default เป็นฟังก์ชันไม่ได้ จึงตั้งค่าในโค้ด
+  updatedAt: integer('updated_at').notNull().default(0),
 });
 
 export const orderItems = sqliteTable('order_items', {

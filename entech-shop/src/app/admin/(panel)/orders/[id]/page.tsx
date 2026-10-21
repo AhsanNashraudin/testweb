@@ -21,12 +21,17 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-4xl space-y-5">
       <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold">คำสั่งซื้อ {o.code} <StatusBadge status={o.status} /></h1>
-      <ActionForm action={updateOrderStatus} className="card flex flex-wrap items-center gap-3 p-4" confirm={{ field: 'status', value: 'cancelled', message: 'ยืนยันยกเลิกคำสั่งซื้อนี้? ระบบจะคืนสต็อกสินค้าอัตโนมัติ' }}>
+      <ActionForm action={updateOrderStatus} className="card grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-4 lg:items-end" confirm={{ field: 'status', value: 'cancelled', message: 'ยืนยันยกเลิกคำสั่งซื้อนี้? ระบบจะคืนสต็อกสินค้าอัตโนมัติ' }}>
         <input type="hidden" name="id" value={o.id} />
-        <label htmlFor="status" className="font-semibold">สถานะ</label>
-        <select id="status" name="status" defaultValue={o.status} className="input max-w-xs">{Object.entries(STATUS_TH).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-        <SubmitButton>อัปเดตสถานะ</SubmitButton>
-        <span className="text-xs text-muted">* เปลี่ยนเป็น “ยกเลิก” ระบบจะคืนสต็อกอัตโนมัติ</span>
+        <div><label htmlFor="status" className="label">สถานะ</label>
+          <select id="status" name="status" defaultValue={o.status} className="input">{Object.entries(STATUS_TH).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <div><label htmlFor="carrier" className="label">ขนส่ง</label><input id="carrier" name="carrier" defaultValue={o.carrier} maxLength={80} placeholder="เช่น Kerry, รถบริษัท" className="input" /></div>
+        <div><label htmlFor="trackingNo" className="label">เลขพัสดุ</label><input id="trackingNo" name="trackingNo" defaultValue={o.trackingNo} maxLength={80} className="input" /></div>
+        <div><label htmlFor="trackingUrl" className="label">ลิงก์ติดตาม (https://)</label><input id="trackingUrl" name="trackingUrl" type="url" defaultValue={o.trackingUrl} maxLength={500} className="input" /></div>
+        <div className="flex flex-wrap items-center gap-3 md:col-span-2 lg:col-span-4">
+          <SubmitButton>บันทึก</SubmitButton>
+          <span className="text-xs text-muted">* เปลี่ยนเป็น “ยกเลิก” ระบบจะคืนสต็อกอัตโนมัติ · ระบบสต็อกอัปเดตช่องเหล่านี้ผ่าน API ได้</span>
+        </div>
       </ActionForm>
       <div className="grid gap-5 md:grid-cols-2">
         <div className="card space-y-1 p-5 text-sm">

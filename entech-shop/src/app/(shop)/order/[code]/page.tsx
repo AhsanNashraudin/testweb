@@ -74,6 +74,14 @@ export default async function OrderPage({ params, searchParams }: Props) {
             <tr className="text-lg font-bold"><td className="pt-2">ยอดชำระทั้งหมด</td><td className="pt-2 text-right">{baht(o.total)}</td></tr>
           </tbody>
         </table>
+        {(o.trackingNo || o.carrier) && (
+          <div data-testid="tracking" className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-cyan-100/60 p-4 text-sm ring-1 ring-cyan-500/30">
+            <b className="text-navy-900">ติดตามพัสดุ</b>
+            {o.carrier && <span>ขนส่ง: <b>{o.carrier}</b></span>}
+            {o.trackingNo && <span>เลขพัสดุ: <b className="font-mono tracking-wide">{o.trackingNo}</b></span>}
+            {/^https:\/\//.test(o.trackingUrl) && <a href={o.trackingUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy-700 underline">ติดตามสถานะ →</a>}
+          </div>
+        )}
         <div className="grid gap-1 rounded-xl border border-slate-200 p-4 text-sm">
           <p><b>ผู้รับ:</b> {o.name} · {o.phone}</p>
           {o.shippingOption !== 'pickup' ? <p><b>ที่อยู่จัดส่ง:</b> {o.address} จ.{o.province} {o.postcode}</p> : (

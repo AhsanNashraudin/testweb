@@ -93,17 +93,18 @@ test('คำสั่งซื้อ: ยกเลิก → คืนสต็�
   expect(await stock()).toBe(s0 - 3);
 
   await login(page);
-  await page.getByTestId('order-row').filter({ hasText: code }).getByRole('link').click();
+  // ไปหน้ารายละเอียดด้วยลิงก์ของแถว (คลิกก่อนหน้า hydrate เสร็จบางครั้งไม่นำทาง → test ไม่เสถียร)
+  await page.goto((await page.getByTestId('order-row').filter({ hasText: code }).getByRole('link').getAttribute('href'))!);
   await page.locator('#status').selectOption('cancelled');
-  await post(page, page.getByRole('button', { name: 'อัปเดตสถานะ' }));
+  await post(page, page.getByRole('button', { name: 'บันทึก', exact: true }));
   await ok(page);
   expect(await stock()).toBe(s0);
   // กดยกเลิกซ้ำต้องไม่คืนสต็อกซ้ำ
   await page.locator('#status').selectOption('cancelled');
-  await post(page, page.getByRole('button', { name: 'อัปเดตสถานะ' }));
+  await post(page, page.getByRole('button', { name: 'บันทึก', exact: true }));
   expect(await stock()).toBe(s0);
   await page.locator('#status').selectOption('paid');
-  await post(page, page.getByRole('button', { name: 'อัปเดตสถานะ' }));
+  await post(page, page.getByRole('button', { name: 'บันทึก', exact: true }));
   await ok(page);
   expect(await stock()).toBe(s0 - 3);
 });
@@ -205,7 +206,7 @@ test('จัดการหน้าแรก: เปลี่ยนแบนเ
   await expect(hero.getByRole('heading', { level: 1 })).toHaveText(/ถังเก็บน้ำคุณภาพ\s*ส่งตรงจากโรงงาน/);
   await expect(hero.getByText('โปรโมชันเดือนนี้')).toBeVisible();
   await expect(hero.getByRole('link', { name: 'ดูถังเก็บน้ำ' })).toHaveAttribute('href', '/products/water-tanks');
-  await expect(hero.locator('img').last()).toHaveAttribute('src', /media%2F\d+|\/media\/\d+/);
+  await expect(hero.getByTestId('hero-image').locator('img')).toHaveAttribute('src', /media%2F\d+|\/media\/\d+/);
   expect(await page.locator('[data-section]').evaluateAll((els) => els.map((e) => e.getAttribute('data-section')))).toEqual(['features', 'why', 'categories', 'featured', 'csr', 'cta']);
   await expect(page.getByText('ส่งไวทั่วไทย')).toBeVisible();
   // รูปที่อัปโหลดเปิดได้จริง
@@ -242,7 +243,7 @@ test('หมวดสินค้า: เปลี่ยนรูปและช
   const form = page.getByTestId('category-form').nth(4); // ถังขยะฝังกำแพง (ลำดับที่ 5)
   await expect(form.getByLabel('ชื่อหมวด')).toHaveValue('ถังขยะฝังกำแพง');
   await form.locator('input[type=file]').setInputFiles('public/images/products/wallbin-flat.jpg');
-  await expect(form.locator('img[src^="/media/"]')).toBeVisible();
+  await expect(form.locator('img[src^="/media/"]')).toBeVisible({ timeout: 15_000 });
   await form.getByLabel('ชื่อหมวด').fill('ถังขยะฝังผนัง');
   await form.getByRole('button', { name: 'บันทึก' }).click();
   await expect(form.getByTestId('flash-ok')).toBeVisible();

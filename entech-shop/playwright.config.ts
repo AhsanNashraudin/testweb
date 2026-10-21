@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // รันกับฐานข้อมูลทดสอบแยก (data/test.db) ที่ล้างและ seed ใหม่ทุกครั้ง
-const env = { DATABASE_URL: 'file:./data/test.db', SITE_URL: 'http://localhost:3100', SESSION_SECRET: 'test-secret-test-secret-test-secret-123', ADMIN_EMAIL: 'admin@entech.local', ADMIN_PASSWORD: 'Entech@2026' };
+const env = { DATABASE_URL: 'file:./data/test.db', SITE_URL: 'http://localhost:3100', SESSION_SECRET: 'test-secret-test-secret-test-secret-123', ADMIN_EMAIL: 'admin@entech.local', ADMIN_PASSWORD: 'Entech@2026', STOCK_API_KEY: 'test-stock-key-0123456789abcdef0123456789' };
 
 export default defineConfig({
   testDir: 'tests/e2e',

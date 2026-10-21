@@ -8,7 +8,7 @@ import type { IconName } from '@/components/icons';
 
 export const DEFAULT_CONTACT = {
   company: 'บริษัท เอนเทค โพรดักส์ จำกัด', regNo: '0105537038071',
-  phone: '02-813-0971-5', mobile: '063-206-1000', email: 'Entechproducts1@gmail.com',
+  phone: '02-813-0971-4', mobile: '063-206-1000', email: 'Entechproducts1@gmail.com',
   line: '@entechproducts', lineUrl: 'https://line.me/R/ti/p/@entechproducts',
   facebook: 'https://www.facebook.com/Entechproducts2026', facebookName: '@Entechproducts2026',
   hours: 'จันทร์–เสาร์ 08:00–16:30',
@@ -32,9 +32,12 @@ export const DEFAULT_HOME = {
     sub: 'สั่งออนไลน์ได้ทันที ค่าส่งคำนวณอัตโนมัติ ส่งทั่วประเทศ หรือรับเองที่โรงงาน',
     btn1Label: 'เลือกซื้อสินค้า', btn1Href: '/products',
     btn2Label: 'ขอใบเสนอราคา', btn2Href: '/services#quote',
-    image: '/images/products/cat_tank.jpg', imageAlt: 'ถังเก็บน้ำ ENTECH ที่โรงงาน',
+    image: '/images/hero-products.webp', imageAlt: 'ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC',
     imageSide: 'right' as 'right' | 'left',
+    // contain = รูปสินค้าพื้นใส วางลอยบนพื้นหลัง (scripts/make-hero.py) · cover = ภาพถ่ายเต็มกรอบมุมมน
+    imageFit: 'contain' as 'contain' | 'cover',
     showCerts: true, // โลโก้มาตรฐาน ISO 9001 และ มอก. ใต้ข้อความรอง
+    certImage: '/images/cert-tis-1568.jpg', // รูปที่ขึ้นเมื่อกดการ์ด มอก. (เว้นว่าง = กดไม่ได้)
   },
   // ลำดับในรายการ = ลำดับบนหน้าเว็บ · title = หัวข้อที่แสดง (แถบปิดท้ายใช้หัวข้อใน cta)
   sections: ([
@@ -47,7 +50,7 @@ export const DEFAULT_HOME = {
     items: [
       { icon: 'truck', title: 'จัดส่งสินค้าทั่วประเทศ', desc: 'กรุงเทพฯ ปริมณฑล และต่างจังหวัด ค่าส่งคำนวณอัตโนมัติตามจังหวัด หรือรับเองที่โรงงาน' },
       { icon: 'award', title: 'สินค้ามาตรฐาน มอก.', desc: 'ผลิตภัณฑ์ได้รับมาตรฐาน มอก. 1379-2551, 816-2538 และ 435-2548' },
-      { icon: 'shield', title: 'รับประกันคุณภาพ', desc: 'ถังเก็บน้ำรับประกันสูงสุด 20 ปี พร้อมทีมงานดูแลหลังการขาย' },
+      { icon: 'shield', title: 'รับประกันคุณภาพ', desc: 'รับประกัน 20 ปี ภายใต้เงื่อนไขการรับประกันของบริษัท ตามข้อกำหนดและเงื่อนไขการรับประกัน' },
       { icon: 'headset', title: 'บริการให้คำปรึกษาฟรี', desc: 'ช่วยเลือกขนาดและรุ่นที่เหมาะกับบ้าน ร้านอาหาร อาคาร และโรงงาน' },
       { icon: 'doc', title: 'ขอใบเสนอราคาฟรี', desc: 'ส่งรายละเอียดงานมา ทีมงานตอบกลับพร้อมใบเสนอราคา ไม่มีค่าใช้จ่าย' },
       { icon: 'stopwatch', title: 'บริการรวดเร็วทันใจ', desc: 'ตอบคำถามทาง LINE และโทรศัพท์ในเวลาทำการ ผลิตและส่งมอบตรงเวลา' },
@@ -98,7 +101,8 @@ export const getHome = cache(async (): Promise<Home> => {
   });
   return {
     ...DEFAULT_HOME, ...saved,
-    hero: { ...DEFAULT_HOME.hero, ...saved.hero },
+    // รูปที่บันทึกไว้ก่อนมีตัวเลือก imageFit เป็นภาพถ่าย → ใช้แบบเต็มกรอบเหมือนเดิม
+    hero: { ...DEFAULT_HOME.hero, ...(saved.hero?.image && !saved.hero.imageFit ? { imageFit: 'cover' as const } : {}), ...saved.hero },
     cta: { ...DEFAULT_HOME.cta, ...saved.cta },
     features: { ...DEFAULT_HOME.features, ...saved.features, items: Array.isArray(saved.features?.items) ? saved.features.items : DEFAULT_HOME.features.items },
     whyStats: Array.isArray(saved.whyStats) ? saved.whyStats : DEFAULT_HOME.whyStats,

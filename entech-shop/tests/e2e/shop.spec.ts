@@ -141,6 +141,24 @@ test('ขอใบเสนอราคา', async ({ page }) => {
   await expect(page.locator('body')).toContainText(/ขอบคุณ|ได้รับ/);
 });
 
+test('หน้าแรก: รูปปกสินค้าจริง + กดการ์ด มอก. เปิดใบอนุญาตในป๊อปอัป (Esc ปิด) · ISO กดไม่ได้', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('hero-image').locator('img')).toHaveAttribute('src', /hero-products/);
+  await expect(page.locator('header')).toContainText('02-813-0971-4');
+  const certs = page.getByTestId('hero-certs');
+  await expect(certs.getByRole('button')).toHaveCount(1);
+  const dlg = page.getByTestId('cert-dialog');
+  await expect(dlg).toBeHidden();
+  await page.getByTestId('cert-open').click();
+  await expect(dlg).toBeVisible();
+  await expect(dlg.locator('img')).toHaveAttribute('src', /cert-tis-1568/);
+  await page.keyboard.press('Escape');
+  await expect(dlg).toBeHidden();
+  await page.getByTestId('cert-open').click();
+  await dlg.getByRole('button', { name: 'ปิด' }).click();
+  await expect(dlg).toBeHidden();
+});
+
 test('เมนูสินค้า: รายชื่อหมวดแนวตั้ง ชี้แล้วแสดงรูปรวมสินค้าของหมวด · หน้าแรกมีโลโก้มาตรฐาน', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByTestId('hero-certs')).toContainText('ISO 9001');

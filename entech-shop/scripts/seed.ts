@@ -40,9 +40,28 @@ async function insertArticles() {
     if (a.kind === 'csr' && cur.kind === 'article') patch.kind = 'csr';
     if (a.image && !cur.image) patch.image = a.image;
     if (cur.body.includes('\n• ') && !cur.body.includes(' | ') && a.body.includes(' | ')) patch.body = a.body; // รายการ → ตาราง
+    for (const [o, n] of TEXT_FIXES) if ((patch.body ?? cur.body).includes(o)) patch.body = (patch.body ?? cur.body).replace(o, n);
     if (Object.keys(patch).length) await db.update(s.articles).set(patch).where(eq(s.articles.id, cur.id));
   }
   return rows.length;
+}
+
+// ข้อความที่ลูกค้าขอแก้ (แก้ในฐานข้อมูลเดิมด้วย ถ้ายังเป็นข้อความเดิมอยู่ — ที่แอดมินแก้เองแล้วจะไม่ถูกแตะ)
+const TEXT_FIXES: [string, string][] = [
+  ['ก่อนสั่งซื้อ ให้วัดพื้นที่วางถังโดยเผื่อที่ว่างรอบถังไว้ เพื่อให้เดินท่อและดูแลได้สะดวก และตรวจว่าพื้นรับน้ำหนักถังเมื่อเต็มได้ (น้ำ 1,000 ลิตร หนักประมาณ 1,000 กิโลกรัม)',
+    'ก่อนสั่งซื้อ ควรวัดพื้นที่สำหรับติดตั้งถัง โดยเผื่อพื้นที่รอบถังสำหรับเดินท่อ ตรวจเช็ก และบำรุงรักษาได้สะดวก รวมถึงตรวจสอบว่าพื้นบริเวณติดตั้งสามารถรองรับน้ำหนักของถังเมื่อบรรจุน้ำเต็มได้'],
+];
+const SETTING_FIXES: [string, string, string][] = [
+  ['contact', '02-813-0971-5', '02-813-0971-4'],
+  ['home', '"image":"/images/products/cat_tank.jpg"', '"image":"/images/hero-products.webp","imageFit":"contain"'],
+  ['home', '"imageAlt":"ถังเก็บน้ำ ENTECH ที่โรงงาน"', '"imageAlt":"ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC"'],
+  ['home', 'ถังเก็บน้ำรับประกันสูงสุด 20 ปี พร้อมทีมงานดูแลหลังการขาย', 'รับประกัน 20 ปี ภายใต้เงื่อนไขการรับประกันของบริษัท ตามข้อกำหนดและเงื่อนไขการรับประกัน'],
+];
+async function fixSettings() {
+  for (const [key, o, n] of SETTING_FIXES) {
+    const [row] = await db.select().from(s.settings).where(eq(s.settings.key, key));
+    if (row?.value.includes(o)) await db.update(s.settings).set({ value: row.value.replaceAll(o, n) }).where(eq(s.settings.key, key));
+  }
 }
 
 // ตั้ง ADMIN_PASSWORD ใหม่แล้วรัน seed ซ้ำ (เช่น redeploy) = รีเซ็ตรหัสผ่านแอดมินคนนี้ได้ โดยไม่แตะข้อมูลอื่น
@@ -79,6 +98,7 @@ async function main() {
         .where(and(eq(s.categories.slug, slug), eq(s.categories.image, `/images/products/${old}.jpg`)));
     }
     const arts = await insertArticles();
+    await fixSettings();
     if (arts) console.log(`✓ เพิ่มบทความ ${arts} เรื่อง`);
     await syncAdmin();
     return console.log(added ? `✓ เพิ่มสินค้าใหม่ ${added} รายการ (ข้อมูลเดิมไม่เปลี่ยน)` : '↷ มีข้อมูลครบแล้ว (ใช้ npm run db:reset เพื่อล้างใหม่)');

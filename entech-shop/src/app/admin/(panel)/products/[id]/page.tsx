@@ -4,6 +4,7 @@ import { db, schema as s } from '@/db';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { saveProduct } from '../../actions';
 import { ImagePicker } from '@/components/image-picker';
+import { stockApiEnabled } from '@/lib/stock-api';
 
 export const metadata = { title: 'แก้ไขสินค้า' };
 
@@ -32,6 +33,7 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
       </section>
       <section className="card p-5">
         <h2 className="mb-3 font-bold">ตัวเลือก ราคา สต็อก น้ำหนัก</h2>
+        {stockApiEnabled() && <p data-testid="stock-sync-note" className="mb-3 rounded-lg bg-warning-50 px-3 py-2 text-sm text-ink">เชื่อมระบบสต็อกแล้ว: ราคา สต็อก และน้ำหนัก อัปเดตจากระบบสต็อกอัตโนมัติ — ถ้าแก้ที่นี่ ค่าจะถูกทับในรอบซิงค์ถัดไป (ควรแก้ที่ระบบสต็อก)</p>}
         <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm">
           <thead className="text-left text-muted"><tr><th>ตัวเลือก / SKU</th><th>ราคาขาย</th><th>ราคาก่อนลด</th><th>ราคาส่ง</th><th>ส่งขั้นต่ำ</th><th>สต็อก</th><th>น้ำหนัก (กก.)</th></tr></thead>
           <tbody>{vs.map((v) => (

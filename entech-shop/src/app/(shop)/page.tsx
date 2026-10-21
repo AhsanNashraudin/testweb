@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HeroCerts } from '@/components/hero-certs';
 import Image from 'next/image';
 import { getCategories, listProducts } from '@/lib/catalog';
 import { listPublished } from '@/lib/articles';
@@ -139,25 +140,24 @@ export default async function Home() {
             {hero.badge && <span className="inline-block rounded-full bg-cyan-700 px-3 py-1 text-sm font-semibold text-white">{hero.badge}</span>}
             <h1 className="whitespace-pre-line text-3xl font-bold leading-tight text-navy-900 md:text-4xl">{hero.title}</h1>
             {hero.lead && <p className="text-lg text-ink">{hero.lead}</p>}
-            {hero.showCerts && (
-              <ul className="flex flex-wrap items-center gap-3" aria-label="มาตรฐานที่ได้รับ" data-testid="hero-certs">
-                {([['/images/cert-iso9001.jpg', 'ISO 9001', 'ระบบบริหารคุณภาพ'], ['/images/cert-tisi.png', 'มาตรฐาน มอก.', 'สำนักงานมาตรฐานผลิตภัณฑ์อุตสาหกรรม']] as const).map(([src, t, d]) => (
-                  <li key={t} className="flex items-center gap-2.5 rounded-xl bg-white py-1.5 pl-1.5 pr-4 shadow-sm ring-1 ring-slate-200">
-                    <Image src={src} alt={t} width={48} height={48} className="h-12 w-12 object-contain" />
-                    <span className="leading-tight"><span className="block text-sm font-bold text-navy-900">{t}</span><span className="block text-xs text-muted">{d}</span></span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {hero.showCerts && <HeroCerts certImage={hero.certImage} />}
             {hero.sub && <p className="text-muted">{hero.sub}</p>}
             <div className="flex flex-wrap gap-3">
               {hero.btn1Label && hero.btn1Href && <Link href={hero.btn1Href} className="btn-primary px-6">{hero.btn1Label}</Link>}
               {hero.btn2Label && hero.btn2Href && <Link href={hero.btn2Href} className="btn-outline">{hero.btn2Label}</Link>}
             </div>
           </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
-            <Image src={hero.image} alt={hero.imageAlt} fill priority sizes="(max-width:768px) 100vw, 600px" className="object-cover" />
-          </div>
+          {hero.imageFit === 'contain' ? (
+            <div className="relative aspect-[4/3]" data-testid="hero-image">
+              {/* แสงฟุ้งด้านหลังสินค้า ให้ภาพดูมีมิติ */}
+              <div aria-hidden className="absolute inset-x-[6%] bottom-[4%] top-[8%] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.95),rgba(207,232,247,0.6)_55%,transparent)]" />
+              <Image src={hero.image} alt={hero.imageAlt} fill priority sizes="(max-width:768px) 100vw, 640px" className="object-contain object-bottom drop-shadow-[0_24px_30px_rgba(15,39,71,0.18)]" />
+            </div>
+          ) : (
+            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl" data-testid="hero-image">
+              <Image src={hero.image} alt={hero.imageAlt} fill priority sizes="(max-width:768px) 100vw, 600px" className="object-cover" />
+            </div>
+          )}
         </div>
       </section>
       <div className="pt-6">

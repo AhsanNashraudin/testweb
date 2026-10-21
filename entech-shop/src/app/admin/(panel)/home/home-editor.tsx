@@ -102,6 +102,18 @@ export function HomeEditor({ initial, defaults, links }: { initial: Home; defaul
                   ))}
                 </div>
               </fieldset>
+              <fieldset>
+                <legend className="label">รูปแบบรูป</legend>
+                <div className="flex gap-2">
+                  {([['contain', 'รูปสินค้าพื้นใส (ลอยบนพื้นหลัง)'], ['cover', 'ภาพถ่ายเต็มกรอบ']] as const).map(([fit, label]) => (
+                    <label key={fit} className={`flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 p-2.5 text-center text-sm font-semibold ${h.hero.imageFit === fit ? 'border-navy-700 bg-navy-50' : 'border-slate-200'}`}>
+                      <input type="radio" name="imageFit" className="sr-only" checked={h.hero.imageFit === fit} onChange={() => hero({ imageFit: fit })} />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-muted">รูปพื้นใส (PNG/WebP) เลือก &ldquo;พื้นใส&rdquo; · รูปถ่ายทั่วไปเลือก &ldquo;เต็มกรอบ&rdquo;</p>
+              </fieldset>
               <Text label="คำอธิบายรูป (สำหรับ Google และผู้พิการทางสายตา)" value={h.hero.imageAlt} onChange={(imageAlt) => hero({ imageAlt })} max={120} />
             </div>
           </div>
@@ -109,6 +121,10 @@ export function HomeEditor({ initial, defaults, links }: { initial: Home; defaul
           <Text label="หัวข้อหลัก *" rows={2} value={h.hero.title} onChange={(title) => hero({ title })} max={120} hint="กด Enter เพื่อขึ้นบรรทัดใหม่" />
           <Text label="ข้อความรอง" rows={2} value={h.hero.lead} onChange={(lead) => hero({ lead })} max={300} />
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={h.hero.showCerts} onChange={(e) => hero({ showCerts: e.target.checked })} className="h-5 w-5" /> แสดงโลโก้มาตรฐาน ISO 9001 และ มอก. ใต้ข้อความรอง</label>
+          {h.hero.showCerts && (
+            <div className="max-w-xs"><ImagePicker label="รูปใบอนุญาต มอก. (ขึ้นเมื่อกดการ์ด มอก.)" value={h.hero.certImage} onChange={(certImage) => hero({ certImage })}
+              aspect="aspect-[3/4]" hint="เว้นว่าง = การ์ด มอก. กดไม่ได้" /></div>
+          )}
           <Text label="ข้อความเพิ่มเติม (ตัวเล็ก)" rows={2} value={h.hero.sub} onChange={(sub) => hero({ sub })} max={300} hint="เว้นว่าง = ไม่แสดง" />
           <div className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
             <Text label="ปุ่มที่ 1 (ปุ่มหลัก) — ข้อความ" value={h.hero.btn1Label} onChange={(btn1Label) => hero({ btn1Label })} max={40} />

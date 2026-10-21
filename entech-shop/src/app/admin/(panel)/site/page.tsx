@@ -7,7 +7,7 @@ export const metadata = { title: 'ข้อมูลร้าน & ติดต�
 const FIELDS: { k: keyof Contact; label: string; hint?: string; wide?: boolean; type?: string }[] = [
   { k: 'company', label: 'ชื่อบริษัท *' },
   { k: 'regNo', label: 'เลขทะเบียนนิติบุคคล' },
-  { k: 'phone', label: 'เบอร์โทรหลัก *', hint: 'เช่น 02-813-0971-5' },
+  { k: 'phone', label: 'เบอร์โทรหลัก *', hint: 'เช่น 02-813-0971-4' },
   { k: 'mobile', label: 'เบอร์มือถือ', hint: 'ใช้กับปุ่มโทรลอยด้านล่างจอมือถือ' },
   { k: 'email', label: 'อีเมล', type: 'email' },
   { k: 'hours', label: 'เวลาทำการ' },
