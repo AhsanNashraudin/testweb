@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+@import '@fontsource/ibm-plex-sans-thai/400.css';
+@import '@fontsource/ibm-plex-sans-thai/500.css';
+@import '@fontsource/ibm-plex-sans-thai/600.css';
+@import '@fontsource/ibm-plex-sans-thai/700.css';
+
+/* Design tokens — ดู DESIGN.md (ค่าสีผ่าน WCAG AA 4.5:1 เมื่อใช้ตามที่กำหนด) */
+@theme {
+  --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --color-navy-900: #16304f;
+  --color-navy-700: #254b7c;
+  --color-navy-600: #2c568a;
+  --color-navy-100: #e6eef7;
+  --color-navy-50: #f3f7fb;
+  --color-cyan-700: #0072b1; /* accent ที่มีตัวอักษร (ขาวบนพื้น 5.2:1) */
+  --color-cyan-600: #0081c8;
+  --color-cyan-500: #009eca; /* ตกแต่ง/เส้นขอบเท่านั้น */
+  --color-cyan-100: #ddf3fa;
+  --color-ink: #1b2430;
+  --color-muted: #45556c; /* ข้อความรอง (≥ 6.6:1 บนทุกพื้นอ่อน) */
+  --color-sale: #c62828;
+  --color-line: #06c755; /* เขียว LINE ทางการ (ลูกค้าขอ) */
+  --color-line-dark: #05a647;
+  --color-success: #15803d;
+  --color-success-50: #f0fdf4;
+  --color-warning: #92400e;
+  --color-warning-50: #fffbeb;
+  --color-danger-50: #fef2f2;
+}
+
+html { scroll-padding-top: 1rem; }
+/* มือถือ: ย่อเฉพาะขนาดตัวอักษร (ไม่ย่อปุ่ม/ระยะ ปุ่มยังกดง่าย ≥ 44px) ให้ข้อความไม่ล้นบรรทัด
+   ช่องกรอกคง 16px ไม่งั้น iPhone ซูมเข้าเองตอนแตะ */
+@media (max-width: 767px) {
+  :root {
+    --text-base: 0.9375rem; --text-lg: 1.0625rem; --text-xl: 1.1875rem;
+    --text-2xl: 1.375rem; --text-3xl: 1.625rem; --text-4xl: 1.875rem;
+  }
+  body { font-size: 0.9375rem; line-height: 1.55; }
+  input, select, textarea { font-size: 16px !important; }
+}
+@media (min-width: 768px) { html { scroll-padding-top: 9rem; } }
+body { @apply bg-white text-ink antialiased; }
+/* แตะบนมือถือไม่หน่วง (ไม่ต้องรอ double-tap zoom) · หัวข้อตัดบรรทัดสวย ไม่เหลือคำเดียวโดด */
+a, button, label, summary, input, select, textarea { touch-action: manipulation; }
+h1, h2, h3 { text-wrap: balance; }
+/* ราคา/ตัวเลขในตารางเรียงหลักตรงกัน */
+table { font-variant-numeric: tabular-nums; }
+/* ผู้ใช้ที่ตั้งค่าลดการเคลื่อนไหว: ปิดแอนิเมชัน/การเลื่อนนุ่ม */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+button:not(:disabled), summary, select { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--color-cyan-600); outline-offset: 2px; }
+
+@utility container-x { @apply mx-auto w-full max-w-[1200px] px-4; }
+@utility btn { @apply inline-flex min-h-11 max-w-full items-center text-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 disabled:cursor-not-allowed disabled:opacity-50; }
+@utility btn-primary { @apply btn bg-navy-700 text-white hover:bg-navy-900; }
+@utility btn-cyan { @apply btn bg-cyan-700 text-white hover:bg-navy-700; }
+@utility btn-outline { @apply btn border-[1.5px] border-navy-700 bg-white text-navy-700 hover:bg-navy-50; }
+@utility btn-line { @apply btn bg-line font-bold text-white shadow-sm hover:bg-line-dark; }
+@utility btn-danger { @apply btn border-[1.5px] border-sale/40 bg-white text-sale hover:bg-danger-50; }
+@utility input { @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-base outline-none placeholder:text-slate-500 focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/40 aria-invalid:border-sale md:text-sm; }
+@utility label { @apply mb-1.5 block text-sm font-medium; }
+@utility card { @apply rounded-2xl border border-slate-200 bg-white; }
+@utility err { @apply mt-1 text-sm text-sale; }
+@utility skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-navy-700 focus:shadow-lg; }
+@keyframes navbar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }

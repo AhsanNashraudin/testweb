@@ -1,0 +1,10 @@
+node_modules
+.next
+data/*.db*
+.env
+.env.local
+test-results
+playwright-report
+*.tsbuildinfo
+# graphify (สร้างใหม่ด้วย: graphify update src)
+graphify-out/
