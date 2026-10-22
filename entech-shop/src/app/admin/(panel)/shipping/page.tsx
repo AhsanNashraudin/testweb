@@ -4,6 +4,7 @@ import { quoteShipping } from '@/lib/shipping';
 import { baht } from '@/lib/format';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { saveZone, saveProvinceMap, savePickup, applyCompareMarkup } from '../actions';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'ค่าจัดส่ง & การชำระเงิน' };
 
@@ -35,6 +36,7 @@ function ZoneForm({ z }: { z?: Z }) {
 }
 
 export default async function ShippingAdmin({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  await requireAdmin();
   const sp = await searchParams;
   const cfg = await loadShippingConfig();
   const tProv = sp.province ?? '', tSub = Math.max(0, Number(sp.subtotal) || 0), tKg = Math.max(0, Number(sp.weight) || 0);

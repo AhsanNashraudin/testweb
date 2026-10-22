@@ -44,9 +44,19 @@ async function setStatus(orderId: number, status: Status) {
 }
 
 /** คืนสต็อกของออเดอร์ (ตอนยกเลิก) */
+const RESTOCK_REASON = 'คืนสต็อก (ยกเลิกออเดอร์)';
 export async function restock(orderId: number, code: string, by: string, tx: Tx | typeof db = db) {
-  const lines = await tx.select().from(s.orderItems).where(eq(s.orderItems.orderId, orderId));
-  for (const l of lines) if (l.itemId) await moveItem(tx, l.itemId, l.qty, 'คืนสต็อก (ยกเลิกออเดอร์)', code, by);
+  // คืนเท่าที่ตัดออกจริง (สต็อกที่ตัดตอนขาย − ที่คืนไปแล้ว) + ของที่โรงงานผลิตเสร็จกันไว้ให้ออเดอร์นี้ — ไม่ใช่ qty ทั้งหมดของบรรทัด
+  const moved = await tx.select({ itemId: s.stockMoves.itemId, q: sql<number>`sum(${s.stockMoves.qty})` }).from(s.stockMoves)
+    .where(and(eq(s.stockMoves.kind, 'item'), eq(s.stockMoves.ref, code), inArray(s.stockMoves.reason, ['ขายให้ออเดอร์', 'ขายผ่านเว็บไซต์', RESTOCK_REASON])))
+    .groupBy(s.stockMoves.itemId);
+  const made = await tx.select({ itemId: s.productionOrders.itemId, q: sql<number>`sum(${s.productionOrders.goodQty})` }).from(s.productionOrders)
+    .where(and(eq(s.productionOrders.orderId, orderId), eq(s.productionOrders.status, 'done')))
+    .groupBy(s.productionOrders.itemId);
+  const back = new Map<number, number>();
+  for (const m of moved) back.set(m.itemId, (back.get(m.itemId) ?? 0) - Number(m.q));
+  for (const m of made) back.set(m.itemId, (back.get(m.itemId) ?? 0) + Number(m.q));
+  for (const [itemId, q] of back) if (q > 0) await moveItem(tx, itemId, q, RESTOCK_REASON, code, by);
 }
 
 // ---------------- ออเดอร์ ----------------

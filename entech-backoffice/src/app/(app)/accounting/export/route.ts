@@ -4,7 +4,11 @@ import { and, eq, gte, lt } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { requireUser } from '@/lib/admin';
 
-const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+// ข้อความที่ขึ้นต้นด้วย = + - @ tab CR จะถูก Excel ตีความเป็นสูตร (CSV injection) — เติม ' นำหน้า · ตัวเลขคงเป็นตัวเลข
+const cell = (v: string | number) => {
+  const t = typeof v === 'number' ? String(v) : /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+  return `"${t.replace(/"/g, '""')}"`;
+};
 const day = (sec: number) => (sec ? new Date(sec * 1000 + 7 * 3600e3).toISOString().slice(0, 10) : '');
 
 export async function GET(req: Request) {

@@ -3,10 +3,12 @@ import Image from 'next/image';
 import { asc, eq, sql } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { baht } from '@/lib/format';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'สินค้า' };
 
 export default async function AdminProducts() {
+  await requireAdmin();
   const rows = await db
     .select({ id: s.products.id, name: s.products.name, image: s.products.image, active: s.products.isActive, cat: s.categories.name, min: sql<number>`min(${s.variants.price})`, stock: sql<number>`sum(${s.variants.stock})` })
     .from(s.products).innerJoin(s.categories, eq(s.categories.id, s.products.categoryId)).leftJoin(s.variants, eq(s.variants.productId, s.products.id))

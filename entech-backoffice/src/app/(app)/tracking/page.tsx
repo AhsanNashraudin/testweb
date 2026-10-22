@@ -3,12 +3,14 @@ import { trackedOrders } from '@/lib/backoffice';
 import { durationTh, STAGE_TH, STAGES, type Stage } from '@/lib/backoffice-rules';
 import { baht } from '@/lib/util';
 import { Badge, Empty, PageHead, StageBar, Tabs, thDate } from '@/components/bo';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'ติดตามออเดอร์' };
 
 type SP = Promise<{ f?: string; stage?: string; ch?: string; q?: string }>;
 
 export default async function Tracking({ searchParams }: { searchParams: SP }) {
+  await requireUser();
   const { f = 'open', stage = '', ch = '', q = '' } = await searchParams;
   const all = await trackedOrders({ includeClosed: true });
   const monthAgo = Date.now() / 1000 - 30 * 86400;

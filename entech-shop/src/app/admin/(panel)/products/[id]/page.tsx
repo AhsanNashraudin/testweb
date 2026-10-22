@@ -5,10 +5,12 @@ import { ActionForm, SubmitButton } from '@/components/action-form';
 import { saveProduct } from '../../actions';
 import { ImagePicker } from '@/components/image-picker';
 import { stockApiEnabled } from '@/lib/stock-api';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'แก้ไขสินค้า' };
 
 export default async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [[p], vs] = await Promise.all([

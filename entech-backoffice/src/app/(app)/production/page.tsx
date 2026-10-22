@@ -5,12 +5,14 @@ import { ActionForm, SubmitButton } from '@/components/action-form';
 import { Badge, PageHead, Stat, thDate } from '@/components/bo';
 import { MO_TH } from '@/lib/status';
 import { createMOAction, moAction } from './../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'โรงงานผลิต' };
 const COLS = ['waiting', 'queued', 'in_progress', 'qc', 'done'] as const;
 const DOT: Record<string, string> = { waiting: 'bg-warning', queued: 'bg-slate-400', in_progress: 'bg-navy-700', qc: 'bg-cyan-600', done: 'bg-success' };
 
 export default async function Production() {
+  await requireUser();
   const now = Math.floor(Date.now() / 1000);
   const weekAgo = now - 7 * 86400;
   const [rows, variants] = await Promise.all([

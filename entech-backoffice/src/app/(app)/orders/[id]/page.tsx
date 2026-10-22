@@ -10,13 +10,16 @@ import { trackedOrders, orderContext } from '@/lib/backoffice';
 import { durationTh, nextStage, STAGE_OWNER, STAGE_TH, STAGES, type Stage } from '@/lib/backoffice-rules';
 import { Badge, thDate, thDateTime } from '@/components/bo';
 import { MO_TH, MO_TONE, ETAX_TH, ETAX_TONE } from '@/lib/status';
+import { requireUser } from '@/lib/admin';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const [o] = await db.select({ code: s.orders.code }).from(s.orders).where(eq(s.orders.id, Number((await params).id) || 0));
   return { title: o ? `ออเดอร์ ${o.code}` : 'ไม่พบออเดอร์' };
 }
 
 export default async function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [o] = await db.select().from(s.orders).where(eq(s.orders.id, id));

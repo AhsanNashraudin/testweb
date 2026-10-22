@@ -33,6 +33,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       data: page.map((o) => orderJson(o, items.filter((i) => i.orderId === o.id))),
       nextCursor: rows.length > q.limit && last ? `${changedAt(last)}_${last.id}` : null,
+      // ตำแหน่งของรายการสุดท้ายในหน้านี้ (มีเสมอเมื่อหน้ามีข้อมูล) — ใช้ส่งกลับเป็น asOf ตอน PUT /items
+      lastCursor: last ? `${changedAt(last)}_${last.id}` : null,
     });
   } catch (e) { return fail(e); }
 }

@@ -59,10 +59,11 @@
     "note": "",
     "items": [{ "sku": "CW-1000", "productName": "ถังเก็บน้ำ ...", "variantName": "1000 ลิตร", "unitPrice": 2600, "qty": 2, "lineTotal": 5200 }]
   }],
-  "nextCursor": "1792814531_42"
+  "nextCursor": "1792814531_42",
+  "lastCursor": "1792814531_42"
 }
 ```
-`nextCursor = null` แปลว่าดึงครบแล้ว — รอบถัดไปให้ใช้ cursor ตัวสุดท้ายที่ไม่เป็น null · `taxInvoice = null` = ไม่ขอใบกำกับภาษี · `method: "pickup"` = ลูกค้ารับเองที่โรงงาน
+`lastCursor` = ตำแหน่งของรายการสุดท้ายในหน้านี้ (มีเสมอเมื่อหน้ามีข้อมูล) — เก็บไว้ส่งเป็น `asOf` ตอน `PUT /items` · `nextCursor = null` แปลว่าดึงครบแล้ว — รอบถัดไปให้ใช้ cursor ตัวสุดท้ายที่ไม่เป็น null · `taxInvoice = null` = ไม่ขอใบกำกับภาษี · `method: "pickup"` = ลูกค้ารับเองที่โรงงาน
 
 ### `GET /orders/{code}`
 คำสั่งซื้อเดียว รูปแบบเดียวกับด้านบน (`{ "data": {...} }`) · ไม่พบ → `404`
@@ -159,3 +160,8 @@ curl -X PATCH -H "Authorization: Bearer $KEY" -H "Content-Type: application/json
 curl -X PUT -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
      -d '{"items":[{"sku":"CW-1000","stock":37}]}' "$BASE/items"
 ```
+
+## `asOf` ใน `PUT /items` (กันการเขียนทับยอดที่เพิ่งขาย)
+
+ส่ง `"asOf": "<lastCursor ล่าสุดที่ดึงแล้ว>"` มาพร้อม `items` ได้ (ไม่บังคับ) — เว็บจะตั้งสต็อกเป็น `stock − จำนวนที่ขายในคำสั่งซื้อที่สร้างหลังจุดนั้น (ไม่นับที่ยกเลิก)`
+ในคำสั่ง UPDATE เดียว ทำให้ออเดอร์ที่เข้ามาระหว่างระบบสต็อกคำนวณยอดไม่ถูกเขียนทับ · ไม่ส่ง `asOf` = ตั้งค่าตรงตามที่ส่ง (พฤติกรรมเดิม)

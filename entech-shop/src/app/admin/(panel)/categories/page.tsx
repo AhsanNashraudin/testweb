@@ -3,11 +3,13 @@ import { ActionForm, SubmitButton } from '@/components/action-form';
 import { ImagePicker } from '@/components/image-picker';
 import { getCategories } from '@/lib/catalog';
 import { saveCategory } from '../actions';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'หมวดสินค้า' };
 
 /** ชื่อ คำอธิบาย และรูปของแต่ละหมวด — รูปนี้ขึ้นในหน้าแรก และขึ้นในเมนู "สินค้า" เมื่อเอาเมาส์ชี้ชื่อหมวด */
 export default async function Categories() {
+  await requireAdmin();
   const cats = await getCategories();
   return (
     <div className="max-w-4xl space-y-5">

@@ -2,6 +2,7 @@
 import bcrypt from 'bcryptjs';
 import { and, eq } from 'drizzle-orm';
 import { db, schema as s } from '../src/db';
+import { dbUrl } from '../src/db/env';
 import { CATS, PRODUCTS, type P } from './catalog';
 import { ARTICLES } from './articles';
 import { compareAt } from '../src/lib/pricing';
@@ -136,7 +137,7 @@ async function main() {
     { key: 'bank_name', value: '' }, { key: 'bank_account', value: '' }, { key: 'bank_holder', value: '' },
   ]);
   await db.insert(s.coupons).values([{ code: 'ENTECH500', type: 'fixed', value: 500, minSubtotal: 5000 }]);
-  if (process.env.VERCEL && !process.env.ADMIN_PASSWORD) throw new Error('บน Vercel ต้องตั้ง ADMIN_PASSWORD (ห้ามใช้รหัสเริ่มต้น)');
+  if ((process.env.VERCEL || !dbUrl().startsWith('file:')) && !process.env.ADMIN_PASSWORD) throw new Error('ฐานข้อมูลจริง/Vercel ต้องตั้ง ADMIN_PASSWORD (ห้ามใช้รหัสเริ่มต้น)');
   if (!process.env.ADMIN_PASSWORD) {
     // dev เท่านั้น: ไม่ได้ตั้ง ADMIN_PASSWORD มา ใช้รหัสเริ่มต้น (syncAdmin ข้ามเคสนี้เพราะต้องมี ADMIN_PASSWORD ชัดเจน)
     const email = process.env.ADMIN_EMAIL?.trim() || 'admin@entech.local';

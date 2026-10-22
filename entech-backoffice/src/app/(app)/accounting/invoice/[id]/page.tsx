@@ -8,10 +8,12 @@ import { ETAX_TH, ETAX_TONE } from '@/lib/status';
 import { Badge, thDate } from '@/components/bo';
 import { DocHead } from '@/components/doc-head';
 import { PrintButton } from '@/components/print-button';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'ใบกำกับภาษี' };
 
 export default async function Invoice({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const id = Number((await params).id);
   const [inv] = Number.isInteger(id) ? await db.select().from(s.invoices).where(eq(s.invoices.id, id)) : [];
   if (!inv) notFound();

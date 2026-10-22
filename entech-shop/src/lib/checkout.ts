@@ -6,6 +6,7 @@ import { isProvince } from './provinces';
 import { quoteShipping, type ShippingOption } from './shipping';
 import { applyCoupon, subtotalOf, weightOf, unitPriceFor, vatOf, MAX_QTY } from './pricing';
 import { loadShippingConfig, getSettings } from './settings';
+import { releaseExpiredOrders, MAX_PENDING_PER_CONTACT } from './orders';
 
 export const itemsSchema = z
   .array(z.object({ variantId: z.number().int().positive(), qty: z.number().int().min(1).max(MAX_QTY) }))
@@ -69,6 +70,7 @@ export function mergeItems(items: { variantId: number; qty: number }[]) {
 
 /** คำนวณตะกร้าใหม่ทั้งหมดจากราคาใน DB — ไม่เชื่อราคาจากฝั่งลูกค้า */
 export async function buildPreview(raw: PreviewInput): Promise<Preview> {
+  await releaseExpiredOrders();
   const input = previewSchema.parse(raw);
   const items = mergeItems(input.items);
   const ids = items.map((i) => i.variantId);
@@ -140,6 +142,10 @@ export async function createOrder(raw: unknown) {
     const st = await getSettings();
     if (!st.bank_account) throw new CheckoutError({ paymentMethod: 'ขณะนี้ยังไม่เปิดรับชำระแบบโอนผ่านบัญชี กรุณาเลือก PromptPay' });
   }
+  // จำกัดออเดอร์ค้างชำระต่อผู้ติดต่อ กันการกักสต็อกด้วยออเดอร์ปลอมจำนวนมาก
+  const [{ n }] = await db.select({ n: sql<number>`count(*)` }).from(s.orders)
+    .where(and(eq(s.orders.status, 'pending_payment'), sql`(${s.orders.phone} = ${o.phone} or lower(${s.orders.email}) = lower(${o.email}))`));
+  if (Number(n) >= MAX_PENDING_PER_CONTACT) throw new CheckoutError({ items: `มีคำสั่งซื้อรอชำระอยู่แล้ว ${n} รายการ กรุณาชำระหรือติดต่อร้านก่อนสั่งเพิ่ม` });
   const pv = await buildPreview(o);
   if (!pv.lines.length) throw new CheckoutError({ items: 'ตะกร้าว่าง' });
   if (pv.hasErrors) throw new CheckoutError({ items: pv.couponError ?? pv.lines.find((l) => l.error)!.error! });

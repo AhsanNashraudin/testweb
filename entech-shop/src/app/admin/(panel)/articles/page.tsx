@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { desc } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'บทความ' };
 
 export default async function Articles() {
+  await requireAdmin();
   const rows = await db.select().from(s.articles).orderBy(desc(s.articles.updatedAt));
   return (
     <div className="space-y-4">

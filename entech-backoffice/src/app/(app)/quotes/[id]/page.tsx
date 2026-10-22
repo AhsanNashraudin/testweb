@@ -12,10 +12,12 @@ import { Badge, thDate } from '@/components/bo';
 import { DocHead } from '@/components/doc-head';
 import { PrintButton } from '@/components/print-button';
 import { convertQuoteAction, quoteItemAction, quoteStatusAction, saveQuoteAction } from '../../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'ใบเสนอราคา' };
 
 export default async function QuoteBuilder({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [[q], lines, vatIn, catalog, company] = await Promise.all([

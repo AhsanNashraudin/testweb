@@ -6,13 +6,16 @@ import { STATUS_TH } from '@/lib/status';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { StatusBadge } from '@/components/status-badge';
 import { updateOrderStatus } from '../../actions';
+import { requireAdmin } from '@/lib/admin';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const [o] = await db.select({ code: s.orders.code }).from(s.orders).where(eq(s.orders.id, Number((await params).id) || 0));
   return { title: o ? `คำสั่งซื้อ ${o.code}` : 'ไม่พบคำสั่งซื้อ' };
 }
 
 export default async function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [o] = await db.select().from(s.orders).where(eq(s.orders.id, id));

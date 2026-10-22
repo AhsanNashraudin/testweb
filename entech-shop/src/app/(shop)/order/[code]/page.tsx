@@ -11,6 +11,7 @@ import { getContact } from '@/lib/content';
 import { StatusBadge } from '@/components/status-badge';
 import { FocusOnMount } from '@/components/focus-on-mount';
 import { LineIcon } from '@/components/line-icon';
+import { RESERVE_HOURS } from '@/lib/orders';
 
 export const metadata: Metadata = { title: 'คำสั่งซื้อของคุณ', robots: { index: false } };
 
@@ -36,6 +37,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
           <h1 id="order-title" tabIndex={-1} className="text-3xl font-bold text-navy-900 outline-none">ขอบคุณสำหรับคำสั่งซื้อ!</h1>
           <p className="mt-2 text-muted">หมายเลขคำสั่งซื้อ <b data-testid="order-code" className="text-ink">{o.code}</b> · <StatusBadge status={o.status} /></p>
           <p className="mt-1 text-sm text-muted">ดูหน้านี้อีกครั้งได้ที่ <Link href="/order/lookup" className="font-semibold text-navy-700 underline">ตรวจสอบคำสั่งซื้อ</Link> ด้วยเลขคำสั่งซื้อ + เบอร์โทร</p>
+          {o.status === 'pending_payment' && <p className="mt-2 text-sm font-medium text-warning" data-testid="reserve-note">กรุณาชำระภายใน {RESERVE_HOURS} ชั่วโมง มิฉะนั้นระบบจะยกเลิกคำสั่งซื้อและคืนสินค้าให้ลูกค้ารายอื่นอัตโนมัติ</p>}
         </div>
         {qr && (
           <div className="flex flex-col items-center gap-4 rounded-2xl bg-navy-50 p-6 md:flex-row">

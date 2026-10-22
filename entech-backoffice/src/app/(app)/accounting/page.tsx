@@ -8,11 +8,13 @@ import { ETAX_TH } from '@/lib/status';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { Badge, Empty, PageHead, Stat, Tabs, thDate } from '@/components/bo';
 import { issueInvoiceAction, markPaidAction, setEtaxAction } from '../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'บัญชี & e-Tax' };
 const AGE_COLOR: Record<AgingBucket, string> = { current: 'bg-success', d30: 'bg-warning', d60: 'bg-sale', d90: 'bg-ink' };
 
 export default async function Accounting({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
+  await requireUser();
   const { f = 'all' } = await searchParams;
   const now = Math.floor(Date.now() / 1000);
   const th = new Date(Date.now() + 7 * 3600e3);

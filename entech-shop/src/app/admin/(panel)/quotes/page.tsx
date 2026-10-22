@@ -3,10 +3,12 @@ import { db, schema as s } from '@/db';
 import { QUOTE_STATUS_TH } from '@/lib/status';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { updateQuoteStatus } from '../actions';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'ใบเสนอราคา' };
 
 export default async function Quotes() {
+  await requireAdmin();
   const rows = await db.select().from(s.quotes).orderBy(desc(s.quotes.id)).limit(200);
   return (
     <div className="space-y-4">

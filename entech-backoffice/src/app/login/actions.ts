@@ -6,6 +6,16 @@ import { eq } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { COOKIE, signSession } from '@/lib/session';
 
+/** รับเฉพาะ path ภายในแอปเดียวกัน (กัน open redirect เช่น /\\evil.com หรือ /%2F%2Fevil.com) */
+function safeNext(raw: string) {
+  if (!raw.startsWith('/') || /[\\\u0000-\u001f]/.test(raw)) return '/';
+  try {
+    const u = new URL(raw, 'http://bo.invalid');
+    if (u.origin !== 'http://bo.invalid' || u.pathname.startsWith('//') || u.pathname.startsWith('/login')) return '/';
+    return u.pathname + u.search + u.hash;
+  } catch { return '/'; }
+}
+
 const DUMMY = '$2b$10$qtPUZ6UiTn.ZUllyNfu0C.CdabjGz5iAyWWqLef2Nvk75rONZQ9ni';
 const attempts = new Map<string, { n: number; until: number }>();
 
@@ -24,8 +34,7 @@ export async function login(_: unknown, form: FormData) {
   attempts.delete(ip);
   const { value, maxAge } = await signSession(u.id);
   (await cookies()).set(COOKIE, value, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge, path: '/' });
-  const next = String(form.get('next') ?? '');
-  redirect(next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/login') ? next : '/');
+  redirect(safeNext(String(form.get('next') ?? '')));
 }
 
 export async function logout() {

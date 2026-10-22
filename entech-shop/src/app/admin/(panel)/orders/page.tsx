@@ -5,10 +5,12 @@ import { StatusBadge } from '@/components/status-badge';
 import { db, schema as s } from '@/db';
 import { baht } from '@/lib/format';
 import { STATUS_TH } from '@/lib/status';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata: Metadata = { title: 'คำสั่งซื้อ' };
 
 export default async function Orders({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
+  await requireAdmin();
   const { status = '', q = '' } = await searchParams;
   const term = q.trim().replace(/[%_]/g, '').slice(0, 40);
   const digits = term.replace(/\D/g, '');

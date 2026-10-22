@@ -1,6 +1,6 @@
 /** เปลี่ยนสถานะ/เลขพัสดุของคำสั่งซื้อ — ใช้ร่วมกันระหว่างหลังบ้านและ API ระบบสต็อก (กฎคืน/ตัดสต็อกที่เดียว) */
 import 'server-only';
-import { eq } from 'drizzle-orm';
+import { and, eq, lt } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { STATUS_TH } from '@/lib/status';
 
@@ -37,4 +37,19 @@ export async function updateOrder(id: number, p: OrderPatch) {
     }).where(eq(s.orders.id, id)).returning();
     return r;
   });
+}
+
+/** คำสั่งซื้อที่ยังไม่ชำระจะจองสต็อกไว้ไม่เกิน RESERVE_HOURS ชม. แล้วยกเลิกอัตโนมัติ (คืนสต็อก)
+ *  กันคนสร้างออเดอร์ปลอมกักสต็อกจนลูกค้าจริงซื้อไม่ได้ · ปรับได้ด้วย env ORDER_RESERVE_HOURS */
+export const RESERVE_HOURS = Math.max(1, Number(process.env.ORDER_RESERVE_HOURS) || 48);
+export const MAX_PENDING_PER_CONTACT = Math.max(1, Number(process.env.ORDER_MAX_PENDING) || 3);
+let lastSweep = 0;
+export async function releaseExpiredOrders(force = false) {
+  if (!force && Date.now() - lastSweep < 60_000) return 0; // อย่างมากนาทีละครั้งต่อ instance
+  lastSweep = Date.now();
+  const cutoff = new Date(Date.now() - RESERVE_HOURS * 3600e3);
+  const expired = await db.select({ id: s.orders.id }).from(s.orders)
+    .where(and(eq(s.orders.status, 'pending_payment'), lt(s.orders.createdAt, cutoff))).limit(100);
+  for (const o of expired) await updateOrder(o.id, { status: 'cancelled' }).catch((e) => console.error('expire order', o.id, e));
+  return expired.length;
 }

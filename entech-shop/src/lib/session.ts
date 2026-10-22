@@ -14,11 +14,13 @@ function secret() {
 const key = () => crypto.subtle.importKey('raw', enc.encode(secret()), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 const b64u = (b: ArrayBuffer | Uint8Array) =>
   btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+// ผูก token กับแอป (ชื่อ cookie) — ร้านค้ากับหลังบ้านใช้ SESSION_SECRET ซ้ำกันก็สลับ cookie ข้ามแอปไม่ได้
+const signed = (payload: string) => enc.encode(`${COOKIE}.${payload}`);
 const unb64u = (s: string) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
 
 export async function signSession(adminId: number) {
   const payload = b64u(enc.encode(JSON.stringify({ id: adminId, exp: Math.floor(Date.now() / 1000) + MAX_AGE })));
-  const sig = b64u(await crypto.subtle.sign('HMAC', await key(), enc.encode(payload)));
+  const sig = b64u(await crypto.subtle.sign('HMAC', await key(), signed(payload)));
   return { value: `${payload}.${sig}`, maxAge: MAX_AGE };
 }
 
@@ -27,7 +29,7 @@ export async function verifySession(token: string | undefined): Promise<{ id: nu
   const [payload, sig] = token.split('.');
   if (!payload || !sig) return null;
   try {
-    const ok = await crypto.subtle.verify('HMAC', await key(), unb64u(sig), enc.encode(payload));
+    const ok = await crypto.subtle.verify('HMAC', await key(), unb64u(sig), signed(payload));
     if (!ok) return null;
     const data = JSON.parse(new TextDecoder().decode(unb64u(payload)));
     return typeof data.id === 'number' && data.exp > Date.now() / 1000 ? { id: data.id } : null;

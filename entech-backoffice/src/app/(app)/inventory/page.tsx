@@ -6,6 +6,7 @@ import { baht } from '@/lib/util';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { Badge, Empty, PageHead, Stat, Tabs, thDateTime } from '@/components/bo';
 import { adjustStockAction, setReorderAction } from '../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'คลังสินค้า' };
 type SP = Promise<{ tab?: string; f?: string; q?: string; page?: string }>;
@@ -22,6 +23,7 @@ const statusOf = (stock: number, reserved: number, rp: number) =>
   stock <= 0 && reserved ? <Badge tone="warn">จองหมดแล้ว</Badge> : stock <= 0 ? <Badge tone="bad">หมด</Badge> : rp && stock <= rp ? <Badge tone="bad">ต่ำกว่าจุดสั่ง</Badge> : <Badge tone="ok">ปกติ</Badge>;
 
 export default async function Inventory({ searchParams }: { searchParams: SP }) {
+  await requireUser();
   const { tab = 'product', f = '', q = '', page = '1' } = await searchParams;
   const [variants, materials, reserved, moves, [{ openMO }]] = await Promise.all([
     db.select({ id: s.items.id, sku: s.items.sku, v: s.items.variantName, name: s.items.productName, stock: s.items.stock, rp: s.items.reorderPoint, price: s.items.price, pending: s.items.pushPending })

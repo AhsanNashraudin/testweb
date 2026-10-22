@@ -2,11 +2,12 @@
  * ต้องมีสินค้าแล้ว: เปิดเว็บไซต์ในเครื่องแล้วกด "ซิงค์ตอนนี้" หรือรัน script นี้ (นำเข้าให้เอง) */
 import { eq, inArray, sql } from 'drizzle-orm';
 import { db, schema as s } from '../src/db';
+import { dbUrl } from '../src/db/env';
 import { importItems } from '../src/lib/sync';
 import { ensureFactory } from '../src/lib/factory';
 
 async function main() {
-  if (!String(process.env.DATABASE_URL ?? 'file:').startsWith('file:')) throw new Error('ใช้กับฐานข้อมูลในเครื่องเท่านั้น');
+  if (!dbUrl().startsWith('file:')) throw new Error('ใช้กับฐานข้อมูลในเครื่องเท่านั้น');
   if (!(await db.select().from(s.items).limit(1)).length) console.log('นำเข้าสินค้า', await importItems());
   await ensureFactory();
   const now = Math.floor(Date.now() / 1000); const H = 3600, D = 86400;

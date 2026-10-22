@@ -5,11 +5,13 @@ import { baht } from '@/lib/util';
 import { trackedOrders } from '@/lib/backoffice';
 import { durationTh, STAGE_TH, STAGES, type Stage } from '@/lib/backoffice-rules';
 import { Badge, Empty, PageHead, Stat } from '@/components/bo';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'แดชบอร์ด' };
 const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
 export default async function Dashboard() {
+  await requireUser();
   const th = new Date(Date.now() + 7 * 3600e3);
   const y = th.getUTCFullYear(), m = th.getUTCMonth();
   const at = (mm: number) => (Date.UTC(y, mm, 1) - 7 * 3600e3) / 1000;

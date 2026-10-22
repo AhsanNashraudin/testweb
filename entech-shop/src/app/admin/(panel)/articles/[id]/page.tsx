@@ -3,10 +3,12 @@ import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { ArticleForm } from '../article-form';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'แก้ไขบทความ' };
 
 export default async function EditArticle({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [a] = await db.select().from(s.articles).where(eq(s.articles.id, id));

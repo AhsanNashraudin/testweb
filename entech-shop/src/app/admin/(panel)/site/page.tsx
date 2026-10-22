@@ -1,6 +1,7 @@
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { getContact, type Contact } from '@/lib/content';
 import { saveContact } from '../actions';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'ข้อมูลร้าน & ติดต่อ' };
 
@@ -21,6 +22,7 @@ const FIELDS: { k: keyof Contact; label: string; hint?: string; wide?: boolean; 
 ];
 
 export default async function SiteSettings() {
+  await requireAdmin();
   const c = await getContact();
   return (
     <ActionForm action={saveContact} className="max-w-3xl space-y-5">

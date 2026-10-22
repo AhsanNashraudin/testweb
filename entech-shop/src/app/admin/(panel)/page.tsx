@@ -3,10 +3,12 @@ import { and, desc, eq, gte, lt, ne, sql } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { baht } from '@/lib/format';
 import { StatusBadge } from '@/components/status-badge';
+import { requireAdmin } from '@/lib/admin';
 
 export const metadata = { title: 'ภาพรวม' };
 
 export default async function Dashboard() {
+  await requireAdmin();
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
   const [[today], [pending], [newQuotes], low, recent] = await Promise.all([
     db.select({ n: sql<number>`count(*)`, sum: sql<number>`coalesce(sum(${s.orders.total}),0)` }).from(s.orders).where(and(gte(s.orders.createdAt, startOfDay), ne(s.orders.status, 'cancelled'))),

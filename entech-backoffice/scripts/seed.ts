@@ -3,6 +3,7 @@
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { db, schema as s } from '../src/db';
+import { dbUrl } from '../src/db/env';
 import { ensureFactory } from '../src/lib/factory';
 
 async function main() {
@@ -10,7 +11,7 @@ async function main() {
   await db.insert(s.settings).values([{ key: 'prices_include_vat', value: '0' }]).onConflictDoNothing();
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'admin@entech.local';
   const pw = process.env.ADMIN_PASSWORD?.trim();
-  if (process.env.VERCEL && !pw) throw new Error('บน Vercel ต้องตั้ง ADMIN_PASSWORD');
+  if ((process.env.VERCEL || !dbUrl().startsWith('file:')) && !pw) throw new Error('ฐานข้อมูลจริง/Vercel ต้องตั้ง ADMIN_PASSWORD');
   if (pw && pw.length < 8) throw new Error('ADMIN_PASSWORD ต้องยาวอย่างน้อย 8 ตัวอักษร');
   const [u] = await db.select().from(s.users).where(eq(s.users.email, email));
   if (u && pw) {

@@ -83,4 +83,17 @@ test.describe('API ระบบสต็อก (/api/v1)', () => {
     await request.put('/api/v1/items', { headers: auth, data: { items: [{ sku: 'CW-1000', price: orig.price, stock: orig.stock }] } });
     expect((await request.put('/api/v1/items', { headers: auth, data: { items: [{ sku: 'X', stock: -1 }] } })).status()).toBe(400);
   });
+  test('asOf: ส่งสต็อกจากระบบสต็อกไม่เขียนทับยอดที่เพิ่งขายหลังรอบดึงล่าสุด', async ({ request }) => {
+    const orig = await item(request, 'PT-15 KG');
+    const page = await (await request.get('/api/v1/orders?updatedSince=2000-01-01T00:00:00Z&limit=100', { headers: auth })).json();
+    let last = page; while (last.nextCursor) last = await (await request.get(`/api/v1/orders?limit=100&cursor=${last.nextCursor}`, { headers: auth })).json();
+    const asOf = last.lastCursor as string;
+    expect(asOf).toMatch(/^\d+_\d+$/);
+    // ลูกค้าซื้อ 3 ชิ้นหลังจากระบบสต็อกดึงไปแล้ว — ระบบสต็อกยังไม่เห็น จึงส่งยอด 50 มา
+    expect((await request.post('/api/orders', { data: order([{ variantId: S['PT-15 KG'], qty: 3 }], { shippingOptionId: 'pickup', phone: '0899990001' }) })).status()).toBe(201);
+    expect((await request.put('/api/v1/items', { headers: auth, data: { asOf, items: [{ sku: 'PT-15 KG', stock: 50 }] } })).status()).toBe(200);
+    expect((await item(request, 'PT-15 KG')).stock).toBe(47);
+    expect((await request.put('/api/v1/items', { headers: auth, data: { asOf: 'x', items: [{ sku: 'PT-15 KG', stock: 1 }] } })).status()).toBe(400);
+    await request.put('/api/v1/items', { headers: auth, data: { items: [{ sku: 'PT-15 KG', stock: orig.stock }] } });
+  });
 });

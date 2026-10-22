@@ -5,7 +5,7 @@
  *    · รูป คำอธิบาย สเปก หมวด SEO ยังจัดการในหลังบ้านเว็บ (API ไม่ทับ) */
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema as s } from '@/db';
 import { readJson } from '@/lib/api';
@@ -43,13 +43,16 @@ const Item = z.strictObject({
     category: z.string().trim().max(80).optional(),
   }).optional(),
 });
-const Body = z.strictObject({ items: z.array(Item).min(1).max(500) });
+// asOf = cursor ของคำสั่งซื้อล่าสุดที่ระบบสต็อกดึงไปแล้ว (lastCursor จาก GET /orders)
+// ถ้าส่งมา เว็บจะหักยอดของคำสั่งซื้อที่เกิดหลังจุดนั้น (ระบบสต็อกยังไม่เห็น) ออกจาก stock ที่ส่งมา ไม่ให้การ sync เขียนทับยอดที่เพิ่งขาย
+const Body = z.strictObject({ items: z.array(Item).min(1).max(500), asOf: z.string().regex(/^\d+_\d+$/).optional() });
 
 export async function PUT(req: Request) {
   const denied = checkKey(req);
   if (denied) return denied;
   try {
-    const { items } = Body.parse(await readJson(req, 1_000_000));
+    const { items, asOf } = Body.parse(await readJson(req, 1_000_000));
+    const [aTs, aId] = (asOf ?? '').split('_').map(Number);
     const markup = Number((await getSettings()).compare_markup ?? 0);
     const cats = Object.fromEntries((await db.select().from(s.categories)).map((c) => [c.slug, c.id]));
     const results: { sku: string; result: 'updated' | 'created' | 'error'; message?: string }[] = [];
@@ -66,6 +69,11 @@ export async function PUT(req: Request) {
 
         const [cur] = await db.select({ id: s.variants.id }).from(s.variants).where(eq(s.variants.sku, it.sku));
         if (cur) {
+          if (it.stock !== undefined && asOf) {
+            // คำนวณและเขียนในคำสั่งเดียว (atomic) — กันออเดอร์ที่เข้ามาระหว่างนี้ถูกเขียนทับ
+            patch.stock = sql`max(0, ${it.stock} - (select coalesce(sum(oi.qty), 0) from ${s.orderItems} oi join ${s.orders} o on o.id = oi.order_id
+              where oi.variant_id = ${cur.id} and o.status <> 'cancelled' and (o.created_at > ${aTs} or (o.created_at = ${aTs} and o.id > ${aId}))))` as unknown as number;
+          }
           if (Object.keys(patch).length) await db.update(s.variants).set(patch).where(eq(s.variants.id, cur.id));
           results.push({ sku: it.sku, result: 'updated' });
           continue;

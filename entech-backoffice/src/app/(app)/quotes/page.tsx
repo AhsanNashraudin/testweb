@@ -7,10 +7,12 @@ import { quoteTotals } from '@/lib/backoffice-rules';
 import { QUOTE_STATUS_TH, QUOTE_TONE } from '@/lib/status';
 import { Badge, Empty, PageHead, Tabs, thDate } from '@/components/bo';
 import { createQuoteAction } from '../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'ใบเสนอราคา' };
 
 export default async function Quotes({ searchParams }: { searchParams: Promise<{ f?: string; new?: string; err?: string }> }) {
+  await requireUser();
   const { f = 'open', new: showNew, err } = await searchParams;
   const [rows, lines, vatIn] = await Promise.all([
     db.select({ q: s.quotes, orderCode: s.orders.code }).from(s.quotes).leftJoin(s.orders, eq(s.orders.id, s.quotes.orderId)).orderBy(desc(s.quotes.id)).limit(300),

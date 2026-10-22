@@ -103,11 +103,13 @@ export async function pullOrders() {
   const n = { new: 0, updated: 0 };
   for (let page = 0; page < 50; page++) {
     const q = cursor ? `cursor=${encodeURIComponent(cursor)}` : 'updatedSince=2000-01-01T00:00:00Z';
-    const { body } = await api<{ data: WebOrder[]; nextCursor: string | null }>(`/orders?limit=100&${q}`);
+    const { body } = await api<{ data: WebOrder[]; nextCursor: string | null; lastCursor?: string | null }>(`/orders?limit=100&${q}`);
     for (const w of body.data) {
       const r = await upsertOrder(w);
       if (r !== 'same') n[r]++;
     }
+    // จุดล่าสุดที่ตัดยอดเข้าสต็อกหลังบ้านแล้ว — ส่งเป็น asOf ตอน pushItems ให้เว็บหักออเดอร์ที่เกิดหลังจากนี้
+    if (body.lastCursor) await setSetting('orders_seen', body.lastCursor);
     if (!body.nextCursor) break;
     cursor = body.nextCursor;
     await setSetting('orders_cursor', cursor);
@@ -132,6 +134,7 @@ export async function pushOrderStatus() {
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export async function pushItems() {
   const rows = await db.select().from(s.items).where(eq(s.items.pushPending, true));
+  const asOf = (await getSetting('orders_seen')) || undefined;
   const errors: string[] = [];
   let ok = 0;
   for (let i = 0; i < rows.length; i += 500) {
@@ -142,12 +145,20 @@ export async function pushItems() {
         sku: x.sku, stock: Math.max(0, x.stock), price: x.price, bulkPrice: x.bulkPrice, bulkMinQty: x.bulkMinQty, weightKg: x.weightKg,
         ...(x.variantName && { variantName: x.variantName }),
         ...(SLUG.test(x.productCode) && { product: { code: x.productCode, ...(x.productName.length >= 2 && { name: x.productName }), ...(x.category && { category: x.category }) } }),
-      })) }),
+      })), ...(asOf && { asOf }) }),
     });
-    const done = body.data.filter((r) => r.result !== 'error').map((r) => r.sku);
+    const done = new Set(body.data.filter((r) => r.result !== 'error').map((r) => r.sku));
     for (const r of body.data) if (r.result === 'error') errors.push(`${r.sku}: ${r.message}`);
-    if (done.length) await db.update(s.items).set({ pushPending: false }).where(inArray(s.items.sku, done));
-    ok += done.length;
+    // ล้างธง pushPending เฉพาะแถวที่ค่ายังตรงกับที่ส่งไป — ถ้าระหว่างส่งมีการแก้สต็อก/ราคา ธงจะค้างไว้ส่งรอบหน้า
+    for (const x of chunk) {
+      if (!done.has(x.sku)) continue;
+      await db.update(s.items).set({ pushPending: false }).where(and(
+        eq(s.items.id, x.id), eq(s.items.stock, x.stock), eq(s.items.price, x.price), eq(s.items.bulkPrice, x.bulkPrice),
+        eq(s.items.bulkMinQty, x.bulkMinQty), eq(s.items.weightKg, x.weightKg), eq(s.items.productName, x.productName),
+        eq(s.items.variantName, x.variantName), eq(s.items.productCode, x.productCode), eq(s.items.category, x.category),
+      ));
+    }
+    ok += done.size;
   }
   return { ok, errors };
 }

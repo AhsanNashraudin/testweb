@@ -6,11 +6,13 @@ import { baht } from '@/lib/util';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { Badge, PageHead, thDateTime } from '@/components/bo';
 import { saveItemAction } from '../../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'สินค้า' };
 const CATS = [['water-tanks', 'ถังเก็บน้ำ'], ['septic-tanks', 'ถังบำบัดน้ำเสีย'], ['grease-traps', 'ถังดักไขมัน'], ['fiberglass-water-tanks', 'ถังน้ำไฟเบอร์กลาส'], ['fiberglass-doors', 'ประตูไฟเบอร์กลาส'], ['wall-bins', 'ถังขยะติดผนัง'], ['planters', 'กระถาง']];
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
   const raw = (await params).id;
   const isNew = raw === 'new';
   const id = Number(raw);

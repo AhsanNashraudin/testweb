@@ -5,10 +5,12 @@ import { baht } from '@/lib/util';
 import { STAGE_TH, STAGES, type Stage } from '@/lib/backoffice-rules';
 import { StatusBadge } from '@/components/status-badge';
 import { Badge, Empty, PageHead, Tabs, thDateTime } from '@/components/bo';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'คำสั่งซื้อ' };
 
 export default async function Orders({ searchParams }: { searchParams: Promise<{ ch?: string; stage?: string; q?: string }> }) {
+  await requireUser();
   const { ch = '', stage = '', q = '' } = await searchParams;
   const term = q.trim().replace(/[%_]/g, '').slice(0, 40);
   const search = term ? or(like(s.orders.code, `%${term.toUpperCase()}%`), like(s.orders.name, `%${term}%`), like(s.orders.phone, `%${term}%`)) : undefined;

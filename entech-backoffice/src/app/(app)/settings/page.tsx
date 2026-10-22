@@ -6,10 +6,12 @@ import { webConfigured } from '@/lib/sync';
 import { ActionForm, SubmitButton } from '@/components/action-form';
 import { Badge, PageHead, Stat, thDateTime } from '@/components/bo';
 import { settingsAction, syncNowAction } from '../actions';
+import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'เชื่อมเว็บไซต์ & ตั้งค่า' };
 
 export default async function Settings() {
+  await requireUser();
   const [lastRaw, vatIn, company, [items], [orders], [status]] = await Promise.all([
     getSetting('sync_last'), getSetting('prices_include_vat', '0'), getCompany(),
     db.select({ n: sql<number>`count(*)` }).from(s.items).where(eq(s.items.pushPending, true)),
