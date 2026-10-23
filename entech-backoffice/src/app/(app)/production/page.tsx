@@ -42,21 +42,22 @@ export default async function Production() {
         <Stat label="ช้ากว่ากำหนด" value={`${late.length} ใบ`} note={late.length ? `กระทบออเดอร์ ${late.filter((r) => r.mo.orderId).length} ราย` : 'ทุกใบตามกำหนด'} tone={late.length ? 'bad' : 'ok'} />
       </div>
 
-      <div className="grid grid-cols-[repeat(5,minmax(210px,1fr))] gap-3 overflow-x-auto pb-2">
+      <div className="grid grid-cols-[repeat(5,minmax(190px,1fr))] gap-3 overflow-x-auto pb-2">
         {COLS.map((c) => {
           const list = rows.filter((r) => r.mo.status === c);
           return (
             <section key={c} className="rounded-2xl bg-slate-100 p-3" aria-labelledby={`col-${c}`}>
               <h2 id={`col-${c}`} className="mb-3 flex items-center gap-2 px-1 text-sm font-bold"><span aria-hidden className={`size-2.5 rounded-full ${DOT[c]}`} />{MO_TH[c]}<span className="ml-auto rounded-full bg-white px-2 text-xs text-muted">{list.length}</span></h2>
-              <ul className="space-y-2.5">{list.map(({ mo, pName, vName, orderCode }) => {
+              <ul className="space-y-2.5">{list.map(({ mo, pName, vName, orderCode, sku }) => {
                 const isLate = c !== 'done' && mo.dueAt < now;
                 const pct = Math.min(100, Math.round((mo.goodQty / mo.qty) * 100));
                 return (
-                  <li key={mo.id} className={`rounded-xl border bg-white p-3.5 ${isLate ? 'border-sale ring-1 ring-sale/30' : 'border-slate-200'}`} data-testid="mo-card">
+                  <li key={mo.id} id={`mo-${mo.id}`} className={`scroll-mt-4 rounded-xl border target:ring-2 target:ring-cyan-600 bg-white p-3.5 ${isLate ? 'border-sale ring-1 ring-sale/30' : 'border-slate-200'}`} data-testid="mo-card">
                     <p className="text-xs font-semibold text-navy-700">{mo.code}</p>
                     <p className="mt-0.5 font-bold leading-snug">{vName}</p>
                     <p className="line-clamp-1 text-xs text-muted" title={pName}>{pName}</p>
-                    <p className="mt-1 text-xs text-ink">{mo.qty} ใบ · {orderCode ? `ออเดอร์ ${orderCode}` : 'ผลิตเก็บสต็อก'}</p>
+                    <p className="text-xs text-muted">{sku}</p>
+                    <p className="mt-1 text-xs text-ink">{mo.qty} ใบ · {orderCode && mo.orderId ? <Link href={`/orders/${mo.orderId}`} className="font-semibold text-navy-700 underline">ออเดอร์ {orderCode}</Link> : 'ผลิตเก็บสต็อก'}</p>
                     {(c === 'in_progress' || c === 'qc') && <div className="mt-2"><div className="h-1.5 rounded-full bg-slate-100"><div className={`h-1.5 rounded-full ${isLate ? 'bg-sale' : 'bg-navy-700'}`} style={{ width: `${pct}%` }} /></div><p className="mt-1 text-right text-xs text-muted">{mo.goodQty}/{mo.qty} ใบ</p></div>}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {isLate ? <Badge tone="bad">เลยกำหนด {thDate(mo.dueAt)}</Badge> : c !== 'done' && <Badge tone="neutral">กำหนดเสร็จ {thDate(mo.dueAt)}</Badge>}
@@ -67,7 +68,7 @@ export default async function Production() {
                     {c !== 'done' && (
                       <ActionForm action={moAction} className="mt-2.5">
                         <input type="hidden" name="id" value={mo.id} />
-                        {(c === 'waiting' || c === 'queued') && <SubmitButton name="op" value="start" className="btn-outline w-full" pendingText="กำลังตรวจวัตถุดิบ…">{c === 'waiting' ? 'ตรวจวัตถุดิบแล้วเริ่มผลิต' : 'เริ่มผลิต (ตัดวัตถุดิบ)'}</SubmitButton>}
+                        {(c === 'waiting' || c === 'queued') && <SubmitButton name="op" value="start" className="btn-outline w-full" pendingText="กำลังตรวจวัตถุดิบ…">{c === 'waiting' ? 'ตรวจวัตถุดิบ · เริ่มผลิต' : 'เริ่มผลิต'}</SubmitButton>}
                         {c === 'in_progress' && <Link href={`/production/m?mo=${mo.id}`} className="btn-outline w-full">บันทึกผลผลิต</Link>}
                         {c === 'qc' && <SubmitButton name="op" value="qc" className="btn-primary w-full" confirm={`ยืนยันผ่านทดสอบรั่วซึม ${mo.goodQty} ใบ และรับเข้าคลัง?`}>ผ่านทดสอบ · รับเข้าคลัง</SubmitButton>}
                       </ActionForm>
@@ -80,13 +81,13 @@ export default async function Production() {
         })}
       </div>
 
-      <section className="card p-5" aria-labelledby="new-mo">
-        <h2 id="new-mo" className="font-bold">เปิดใบสั่งผลิต (ผลิตเก็บสต็อก)</h2>
+      <section className="card scroll-mt-4 p-5" aria-labelledby="new-mo" id="new-mo-form">
+        <h2 id="new-mo" className="scroll-mt-4 font-bold">เปิดใบสั่งผลิต (ผลิตเก็บสต็อก)</h2>
         <p className="mb-3 text-xs text-muted">ใบสั่งผลิตของออเดอร์ลูกค้าเปิดอัตโนมัติจากใบเสนอราคา หรือเปิดเองได้ที่หน้าออเดอร์ · ถ้าวัตถุดิบไม่พอจะอยู่ช่อง “รอวัตถุดิบ”</p>
-        <ActionForm action={createMOAction} resetOnSuccess className="grid gap-3 md:grid-cols-[2fr_100px_110px_1fr_1fr_auto] md:items-end">
-          <div><label htmlFor="v" className="label">สินค้า</label><select id="v" name="itemId" required className="input">{variants.map((v) => <option key={v.id} value={v.id}>{v.name} {v.v} ({v.sku})</option>)}</select></div>
-          <div><label htmlFor="q" className="label">จำนวน (ใบ)</label><input id="q" name="qty" type="number" min={1} required defaultValue={10} className="input" /></div>
-          <div><label htmlFor="d" className="label">เสร็จใน (วัน)</label><input id="d" name="dueDays" type="number" min={0} defaultValue={3} className="input" /></div>
+        <ActionForm action={createMOAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2 sm:items-end 2xl:grid-cols-[2fr_100px_110px_1fr_1fr_auto]">
+          <div className="sm:col-span-2 2xl:col-span-1"><label htmlFor="v" className="label">สินค้า</label><select id="v" name="itemId" required className="input">{variants.map((v) => <option key={v.id} value={v.id}>{v.name} {v.v} ({v.sku})</option>)}</select></div>
+          <div><label htmlFor="q" className="label">จำนวน (ใบ)</label><input id="q" name="qty" type="number" min={1} max={10000} required defaultValue={10} className="input" /></div>
+          <div><label htmlFor="d" className="label">เสร็จใน (วัน)</label><input id="d" name="dueDays" type="number" min={0} max={365} defaultValue={3} className="input" /></div>
           <div><label htmlFor="l" className="label">แม่พิมพ์/ไลน์</label><input id="l" name="line" maxLength={60} placeholder="แม่พิมพ์ 1" className="input" /></div>
           <div><label htmlFor="a" className="label">ผู้รับผิดชอบ</label><input id="a" name="assignee" maxLength={60} placeholder="ชื่อช่าง" className="input" /></div>
           <SubmitButton>เปิดใบสั่งผลิต</SubmitButton>

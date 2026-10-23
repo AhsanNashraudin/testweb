@@ -8,13 +8,18 @@ import { getCompany } from '@/lib/company';
 import { MAX_SALES_DISCOUNT, quoteTotals } from '@/lib/backoffice-rules';
 import { QUOTE_STATUS_TH, QUOTE_TONE } from '@/lib/status';
 import { ActionForm, SubmitButton } from '@/components/action-form';
-import { Badge, thDate } from '@/components/bo';
+import { Badge, thDate, thDateFull } from '@/components/bo';
 import { DocHead } from '@/components/doc-head';
 import { PrintButton } from '@/components/print-button';
 import { convertQuoteAction, quoteItemAction, quoteStatusAction, saveQuoteAction } from '../../actions';
 import { requireUser } from '@/lib/admin';
 
-export const metadata = { title: 'ใบเสนอราคา' };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  await requireUser();
+  const id = Number((await params).id);
+  const [q] = Number.isInteger(id) ? await db.select({ code: s.quotes.code, name: s.quotes.name, company: s.quotes.company }).from(s.quotes).where(eq(s.quotes.id, id)) : [];
+  return { title: q ? `${q.code} ${q.company || q.name}` : 'ไม่พบใบเสนอราคา' };
+}
 
 export default async function QuoteBuilder({ params }: { params: Promise<{ id: string }> }) {
   await requireUser();
@@ -38,7 +43,7 @@ export default async function QuoteBuilder({ params }: { params: Promise<{ id: s
 
   return (
     <div className="max-w-6xl space-y-5">
-      <DocHead c={company} title="ใบเสนอราคา" code={q.code} lines={[['วันที่', thDate(q.createdAt)], ['ยืนราคาถึง', thDate(validUntil)], ['ผู้เสนอ', q.salesperson]]} />
+      <DocHead c={company} title="ใบเสนอราคา" code={q.code} lines={[['วันที่', thDateFull(q.createdAt)], ['ยืนราคาถึง', thDateFull(validUntil)], ['ผู้เสนอ', q.salesperson]]} />
       <Link href="/quotes" className="inline-flex min-h-11 items-center text-sm font-semibold text-navy-700 print:hidden">← ใบเสนอราคาทั้งหมด</Link>
       <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
         <div>
@@ -46,7 +51,7 @@ export default async function QuoteBuilder({ params }: { params: Promise<{ id: s
           <p className="mt-1 text-sm text-muted">{q.topic || 'ไม่ระบุเรื่อง'} · ยืนราคาถึง {thDate(validUntil)} · เซลล์ {q.salesperson}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!locked && <ActionForm action={quoteStatusAction} className="flex gap-2"><input type="hidden" name="id" value={id} />
+          {!locked && <ActionForm action={quoteStatusAction} className="flex flex-wrap gap-2"><input type="hidden" name="id" value={id} />
             <select name="status" defaultValue={q.status} aria-label="สถานะใบเสนอราคา" className="input w-40">{(['draft', 'sent', 'lost'] as const).map((k) => <option key={k} value={k}>{QUOTE_STATUS_TH[k]}</option>)}</select>
             <SubmitButton className="btn-outline">บันทึก</SubmitButton></ActionForm>}
           <PrintButton />
@@ -72,7 +77,7 @@ export default async function QuoteBuilder({ params }: { params: Promise<{ id: s
           </section>
 
           <section className="card p-5 print:mt-4 print:border-0 print:p-0" aria-labelledby="items-h">
-            <h2 id="items-h" className="font-bold">รายการสินค้า</h2><p className="mb-3 text-xs text-muted print:hidden">ราคาเริ่มจาก Price List (ราคาส่งเมื่อถึงจำนวน) แก้ราคาต่อหน่วยได้ · สถานะสต็อกตรงกับคลังจริง</p>
+            <h2 id="items-h" className="font-bold">รายการสินค้า</h2><p className="mb-3 text-xs text-muted print:hidden">ราคาเริ่มจากราคาขายในคลัง (ใช้ราคาส่งเมื่อถึงจำนวน) แก้ราคาต่อหน่วยได้ · สถานะสต็อกตรงกับคลังจริง</p>
             {lines.length ? <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm print:min-w-0">
               <thead className="bg-slate-50 text-left text-xs text-muted"><tr><th className="rounded-l-lg p-2.5">สินค้า</th><th className="print:hidden">สต็อก</th><th>จำนวน / ราคาต่อหน่วย</th><th className="rounded-r-lg p-2.5 text-right">รวม</th></tr></thead>
               <tbody>{lines.map((l) => (
@@ -91,14 +96,14 @@ export default async function QuoteBuilder({ params }: { params: Promise<{ id: s
                   )}</td>
                   <td className="p-2.5 text-right font-semibold">{baht(l.qty * l.unitPrice)}</td>
                 </tr>
-              ))}</tbody></table></div> : <p className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-muted">ยังไม่มีรายการ เพิ่มสินค้าด้านล่าง</p>}
+              ))}</tbody></table></div> : <p className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-muted">ยังไม่มีรายการ · <a href="#sku" className="font-semibold text-navy-700 underline">เพิ่มสินค้ารายการแรก ↓</a></p>}
             {!locked && (
               <ActionForm action={quoteItemAction} resetOnSuccess className="mt-4 grid gap-2 border-t border-slate-100 pt-4 sm:grid-cols-[1fr_100px_auto] sm:items-end print:hidden">
                 <input type="hidden" name="quoteId" value={id} /><input type="hidden" name="op" value="add" />
                 <div><label htmlFor="sku" className="label">เพิ่มสินค้า (พิมพ์รหัสหรือชื่อ)</label><input id="sku" name="sku" list="catalog" required className="input" placeholder="CW-1000" autoComplete="off" />
                   <datalist id="catalog">{catalog.map((c) => <option key={c.sku} value={c.sku}>{c.name} {c.v} · {c.price ? baht(c.price) : 'สอบถามราคา'}</option>)}</datalist></div>
-                <div><label htmlFor="qty" className="label">จำนวน</label><input id="qty" name="qty" type="number" min={1} defaultValue={1} className="input" /></div>
-                <SubmitButton className="btn-outline">+ เพิ่ม</SubmitButton>
+                <div><label htmlFor="qty" className="label">จำนวน</label><input id="qty" name="qty" type="number" min={1} max={10000} defaultValue={1} className="input" /></div>
+                <SubmitButton className={lines.length ? 'btn-outline' : 'btn-primary'}>+ เพิ่ม</SubmitButton>
               </ActionForm>
             )}
             <dl className="ml-auto mt-4 hidden w-64 space-y-1 text-sm print:block">
@@ -141,7 +146,7 @@ export default async function QuoteBuilder({ params }: { params: Promise<{ id: s
                 <input type="hidden" name="id" value={id} />
                 <p className="mb-3 text-sm text-muted">ลูกค้ายืนยันแล้ว? เปิดออเดอร์ ตัดสต็อก และส่งงานต่อให้คลัง/โรงงานในคลิกเดียว</p>
                 <SubmitButton className="btn-primary w-full" disabled={!lines.length} confirm={`ยืนยันเปิดออเดอร์ ${baht(t.total)}?`}>ลูกค้ายืนยัน · เปิดออเดอร์</SubmitButton>
-                {!lines.length && <p className="mt-2 text-xs text-muted">เพิ่มสินค้าอย่างน้อย 1 รายการก่อน</p>}
+                {!lines.length && <p className="mt-2 text-sm text-muted">ต้องมีสินค้าอย่างน้อย 1 รายการ · <a href="#sku" className="font-semibold text-navy-700 underline">ไปเพิ่มสินค้า</a></p>}
               </ActionForm>
             )}
           </section>

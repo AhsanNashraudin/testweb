@@ -22,14 +22,14 @@ export default async function Orders({ searchParams }: { searchParams: Promise<{
   return (
     <div className="space-y-5">
       <PageHead title="คำสั่งซื้อ" sub="ออเดอร์จากเว็บไซต์ (ซิงค์อัตโนมัติ) และจากทีมเซลล์ (เปิดจากใบเสนอราคา)">
-        <Link href="/quotes?new=1" className="btn-primary">+ ใบเสนอราคา / ออเดอร์เซลล์</Link>
+        <Link href="/quotes?new=1" className="btn-primary">+ ใบเสนอราคาใหม่</Link>
       </PageHead>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs current={ch || 'all'} items={[{ key: 'all', label: 'ทุกช่องทาง', href: href({ ch: '' }) }, { key: 'web', label: 'เว็บไซต์', href: href({ ch: 'web' }) }, { key: 'sales', label: 'ทีมเซลล์', href: href({ ch: 'sales' }) }]} />
-        <form className="flex gap-2" role="search">
+        <form className="flex w-full flex-wrap gap-2 sm:w-auto" role="search">
           {ch && <input type="hidden" name="ch" value={ch} />}
-          <select name="stage" defaultValue={stage} aria-label="ขั้นตอน" className="input w-40"><option value="">ทุกขั้นตอน</option>{[...STAGES, 'cancelled' as const].map((x) => <option key={x} value={x}>{STAGE_TH[x]}</option>)}</select>
-          <input name="q" type="search" defaultValue={q} placeholder="เลขออเดอร์ / ชื่อ / เบอร์" aria-label="ค้นหาออเดอร์" className="input w-56" />
+          <select name="stage" defaultValue={stage} aria-label="ขั้นตอน" className="input w-full sm:w-40"><option value="">ทุกขั้นตอน</option>{[...STAGES, 'cancelled' as const].map((x) => <option key={x} value={x}>{STAGE_TH[x]}</option>)}</select>
+          <input name="q" type="search" defaultValue={q} placeholder="เลขออเดอร์ / ชื่อ / เบอร์" aria-label="ค้นหาออเดอร์" className="input min-w-0 flex-1 sm:w-56 sm:flex-none" />
           <button className="btn-outline">ค้นหา</button>
         </form>
       </div>
@@ -47,7 +47,9 @@ export default async function Orders({ searchParams }: { searchParams: Promise<{
               <td className="p-3 text-right"><StatusBadge status={o.status} />{o.statusPending && <span className="block text-xs text-muted">รอส่งให้เว็บ</span>}</td>
             </tr>
           ))}</tbody>
-        </table> : <Empty>{term ? `ไม่พบออเดอร์ที่ตรงกับ “${term}”` : 'ยังไม่มีออเดอร์ · ออเดอร์เว็บจะเข้ามาเองทุก 5 นาที'}</Empty>}
+        </table> : <Empty>{term || ch || stage
+          ? <>ไม่พบออเดอร์ตามตัวกรอง{term && ` “${term}”`} · <Link href="/orders" className="font-semibold text-navy-700 underline">ล้างตัวกรอง</Link></>
+          : 'ยังไม่มีออเดอร์ · ออเดอร์เว็บจะเข้ามาเองทุก 5 นาที'}</Empty>}
       </div>
     </div>
   );

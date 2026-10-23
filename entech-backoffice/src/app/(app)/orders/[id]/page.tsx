@@ -24,19 +24,26 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   if (!Number.isInteger(id)) notFound();
   const [o] = await db.select().from(s.orders).where(eq(s.orders.id, id));
   if (!o) notFound();
-  const [items, events, mos, ctx, tracked] = await Promise.all([
+  const [items, events, mos, ctx, tracked, [quote]] = await Promise.all([
     db.select().from(s.orderItems).where(eq(s.orderItems.orderId, id)),
     db.select().from(s.orderEvents).where(eq(s.orderEvents.orderId, id)).orderBy(desc(s.orderEvents.id)),
     db.select({ mo: s.productionOrders, sku: s.items.sku }).from(s.productionOrders).innerJoin(s.items, eq(s.items.id, s.productionOrders.itemId)).where(eq(s.productionOrders.orderId, id)),
     orderContext(id), trackedOrders({ includeClosed: true }),
+    db.select({ id: s.quotes.id, code: s.quotes.code }).from(s.quotes).where(eq(s.quotes.orderId, id)).limit(1),
   ]);
   const t = tracked.find((x) => x.id === id)!;
   const stage = o.stage as Stage;
   const open = stage !== 'done' && stage !== 'cancelled';
   const curIdx = STAGES.indexOf(stage as (typeof STAGES)[number]);
   const nxt = nextStage(stage, { openMOs: ctx.openMOs, paid: ctx.paid });
-  const reached = new Map(events.map((e) => [e.stage, e]));
   const inv = ctx.invoice;
+  // ไทม์ไลน์: ขั้นที่ผ่านแล้วแสดงเวลา/ผู้ที่ "ส่งต่อออกจากขั้นนั้น" (เช่น ผู้อนุมัติ) จากเหตุการณ์เปลี่ยนขั้นเท่านั้น
+  const order = [...STAGES] as string[];
+  const moves = events.filter((e) => order.includes(e.stage)).sort((a, b) => a.at - b.at || a.id - b.id);
+  const leftAt = (i: number) => moves.find((e) => order.indexOf(e.stage) > i);
+  // ส่งต่อไม่ได้เพราะอะไร (แสดงปุ่มแบบปิดพร้อมเหตุผล แทนการกดแล้วเจอ error)
+  const unpaidBlock = o.status === 'pending_payment' && (stage === 'received' || stage === 'production') && (o.channel === 'web' || o.creditDays === 0);
+  const block = stage === 'production' && ctx.openMOs ? `ยังมีใบสั่งผลิตค้าง ${ctx.openMOs} ใบ` : unpaidBlock && stage === 'received' ? 'ยังไม่ได้รับชำระเงิน (กด "บันทึกรับเงิน" ก่อน)' : stage === 'billing' && !inv ? 'ยังไม่ได้ออกใบกำกับภาษี' : '';
   const makeable = items.filter((i) => i.itemId);
   return (
     <div className="max-w-6xl space-y-5">
@@ -44,13 +51,14 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold text-navy-900">ออเดอร์ {o.code} <StatusBadge status={o.status} />{t.late > 0 && <Badge tone="bad">เกินกำหนด {durationTh(t.late)}</Badge>}<Badge tone={o.channel === 'web' ? 'ok' : 'neutral'}>{o.channel === 'web' ? 'เว็บไซต์' : 'ทีมเซลล์'}</Badge></h1>
-          <p className="mt-1 text-sm text-muted">{o.name} · สั่งเมื่อ {thDateTime(o.createdAt)}{o.creditDays ? ` · เครดิต ${o.creditDays} วัน` : ''}{o.statusPending && ' · รอส่งสถานะให้เว็บ'}</p>
+          <p className="mt-1 text-sm text-muted">{o.name} · สั่งเมื่อ {thDateTime(o.createdAt)}{o.creditDays ? ` · เครดิต ${o.creditDays} วัน` : ''}{o.statusPending && ' · รอส่งสถานะให้เว็บ'}{quote && <> · จากใบเสนอราคา <Link href={`/quotes/${quote.id}`} className="text-navy-700 underline">{quote.code}</Link></>}</p>
         </div>
         {open && (
           <div className="flex flex-wrap gap-2">
             <ActionForm action={cancelOrderAction}><input type="hidden" name="id" value={o.id} /><SubmitButton className="btn-danger" confirm="ยืนยันยกเลิกออเดอร์นี้? ระบบจะคืนสต็อกและยกเลิกใบสั่งผลิตที่ยังไม่เริ่ม">ยกเลิกออเดอร์</SubmitButton></ActionForm>
-            {o.status === 'pending_payment' && <ActionForm action={confirmPaymentAction}><input type="hidden" name="id" value={o.id} /><SubmitButton className="btn-outline" confirm={`ยืนยันว่าได้รับเงิน ${baht(o.total)} แล้ว?`}>ยืนยันรับชำระ</SubmitButton></ActionForm>}
-            {nxt && <ActionForm action={advanceOrderAction}><input type="hidden" name="id" value={o.id} /><SubmitButton pendingText="กำลังส่งต่อ…">{stage === 'approval' ? 'อนุมัติ และส่งต่อ' : `ส่งต่อ: ${STAGE_TH[nxt]} →`}</SubmitButton></ActionForm>}
+            {o.status === 'pending_payment' && <ActionForm action={confirmPaymentAction}><input type="hidden" name="id" value={o.id} /><SubmitButton className={unpaidBlock ? 'btn-primary' : 'btn-outline'} confirm={`ยืนยันว่าได้รับเงิน ${baht(o.total)} แล้ว?`}>บันทึกรับเงิน</SubmitButton></ActionForm>}
+            {nxt && <ActionForm action={advanceOrderAction}><input type="hidden" name="id" value={o.id} /><SubmitButton pendingText="กำลังส่งต่อ…" disabled={!!block} aria-describedby={block ? 'adv-why' : undefined} className={unpaidBlock ? 'btn-outline' : 'btn-primary'}>{stage === 'approval' ? 'อนุมัติ และส่งต่อ' : `ส่งต่อ: ${STAGE_TH[nxt]} →`}</SubmitButton></ActionForm>}
+            {nxt && block && <p id="adv-why" className="basis-full text-right text-sm text-warning">ส่งต่อไม่ได้: {block}</p>}
           </div>
         )}
       </div>
@@ -59,7 +67,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         {STAGES.filter((x) => x !== 'done').map((st, i) => {
           const done = stage === 'done' || (curIdx > i && stage !== 'cancelled');
           const now = st === stage;
-          const ev = reached.get(st);
+          const ev = done ? leftAt(i) : undefined;
           return (
             <li key={st} className="relative pr-2" aria-current={now ? 'step' : undefined}>
               <div className="flex items-center gap-2">
@@ -67,8 +75,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                 {i < 5 && <span className={`h-0.5 flex-1 rounded ${done ? 'bg-success' : 'bg-slate-200'}`} />}
               </div>
               <p className={`mt-2 text-sm font-semibold ${!done && !now ? 'text-muted' : ''}`}>{STAGE_TH[st]}</p>
-              <p className="text-xs text-muted">{now ? (o.assignee || t.owner) : ev?.by && done ? ev.by : STAGE_OWNER[st]}</p>
-              <p className={`text-xs ${now && t.late ? 'font-semibold text-sale' : 'text-muted'}`}>{now ? `อยู่ขั้นนี้ ${durationTh(t.inStage)}` : ev && done ? thDateTime(ev.at) : '—'}</p>
+              <p className="text-xs text-muted">{now ? (o.assignee || t.owner) : ev?.by ? `${st === 'approval' ? 'อนุมัติโดย ' : ''}${ev.by}` : STAGE_OWNER[st]}</p>
+              <p className={`text-xs ${now && t.late ? 'font-semibold text-sale' : 'text-muted'}`}>{now ? `อยู่ขั้นนี้ ${durationTh(t.inStage)}` : ev ? `เสร็จ ${thDateTime(ev.at)}` : '—'}</p>
             </li>
           );
         })}
@@ -93,13 +101,13 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             <section className="card p-5" aria-labelledby="mo-h">
               <h2 id="mo-h" className="mb-3 font-bold">ใบสั่งผลิตของออเดอร์นี้</h2>
               {mos.length ? <ul className="divide-y divide-slate-100 text-sm">{mos.map(({ mo, sku }) => (
-                <li key={mo.id} className="flex flex-wrap items-center justify-between gap-2 py-2"><span><Link href="/production" className="font-semibold text-navy-700">{mo.code}</Link> · {sku} × {mo.qty} ใบ<span className="block text-xs text-muted">ผลิตแล้ว {mo.goodQty}/{mo.qty}{mo.note && ` · ${mo.note}`}</span></span><Badge tone={MO_TONE[mo.status]}>{MO_TH[mo.status]}</Badge></li>
+                <li key={mo.id} className="flex flex-wrap items-center justify-between gap-2 py-2"><span><Link href={mo.status === "in_progress" ? `/production/m?mo=${mo.id}` : `/production#mo-${mo.id}`} className="font-semibold text-navy-700 underline">{mo.code}</Link> · {sku} × {mo.qty} ใบ<span className="block text-xs text-muted">ผลิตแล้ว {mo.goodQty}/{mo.qty}{mo.note && ` · ${mo.note}`}</span></span><Badge tone={MO_TONE[mo.status]}>{MO_TH[mo.status]}</Badge></li>
               ))}</ul> : <p className="text-sm text-muted">ยังไม่มีใบสั่งผลิต ถ้าของไม่พอให้สั่งผลิตด้านล่าง</p>}
               {open && makeable.length > 0 && (
                 <ActionForm action={createMOAction} className="mt-3 grid gap-2 border-t border-slate-100 pt-3 sm:grid-cols-[1fr_100px_auto] sm:items-end">
                   <input type="hidden" name="orderId" value={o.id} />
                   <div><label className="label" htmlFor="mo-v">สินค้าที่จะผลิต</label><select id="mo-v" name="itemId" className="input">{makeable.map((i) => <option key={i.id} value={i.itemId!}>{i.productName} {i.variantName} ({i.sku})</option>)}</select></div>
-                  <div><label className="label" htmlFor="mo-q">จำนวน</label><input id="mo-q" name="qty" type="number" min={1} defaultValue={1} className="input" /></div>
+                  <div><label className="label" htmlFor="mo-q">จำนวน</label><input id="mo-q" name="qty" type="number" min={1} max={10000} defaultValue={1} className="input" /></div>
                   <SubmitButton className="btn-outline">เปิดใบสั่งผลิต</SubmitButton>
                 </ActionForm>
               )}
@@ -109,13 +117,14 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           <section className="card p-5" aria-labelledby="ship-h">
             <h2 id="ship-h" className="mb-3 font-bold">การจัดส่ง</h2>
             <p className="mb-3 text-sm text-muted">{o.shippingLabel || '—'}{o.channel === 'web' && ' · บันทึกแล้วลูกค้าเห็นในหน้า "ตรวจสอบคำสั่งซื้อ" บนเว็บ'}</p>
+            {!open ? <p className="text-sm">{[o.carrier, o.trackingNo].filter(Boolean).join(' · ') || 'ไม่ได้บันทึกขนส่ง'}{o.trackingUrl && <> · <a href={o.trackingUrl} target="_blank" rel="noopener noreferrer" className="text-navy-700 underline">ลิงก์ติดตาม</a></>}</p> :
             <ActionForm action={trackingAction} className="grid gap-3 md:grid-cols-3 md:items-end">
               <input type="hidden" name="id" value={o.id} />
               <div><label htmlFor="carrier" className="label">ขนส่ง</label><input id="carrier" name="carrier" defaultValue={o.carrier} maxLength={80} placeholder="เช่น Kerry, รถบริษัท" className="input" /></div>
               <div><label htmlFor="trackingNo" className="label">เลขพัสดุ</label><input id="trackingNo" name="trackingNo" defaultValue={o.trackingNo} maxLength={80} className="input" /></div>
               <div><label htmlFor="trackingUrl" className="label">ลิงก์ติดตาม (https://)</label><input id="trackingUrl" name="trackingUrl" type="url" defaultValue={o.trackingUrl} maxLength={300} className="input" /></div>
               <div className="md:col-span-3"><SubmitButton className="btn-outline">บันทึกขนส่ง</SubmitButton></div>
-            </ActionForm>
+            </ActionForm>}
           </section>
 
           <section className="card p-5" aria-labelledby="doc-h">
@@ -123,7 +132,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             {inv ? (
               <div className="grid gap-3 text-sm sm:grid-cols-2">
                 <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs text-muted">ใบกำกับภาษี</p><Link href={`/accounting/invoice/${inv.id}`} className="font-semibold text-navy-700 underline">{inv.code}</Link><p className="text-xs text-muted">ออก {thDate(inv.issuedAt)} · ครบกำหนด {thDate(inv.dueAt)}</p><div className="mt-2"><Badge tone={ETAX_TONE[inv.etaxStatus]}>e-Tax: {ETAX_TH[inv.etaxStatus]}</Badge></div></div>
-                <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs text-muted">ใบเสร็จรับเงิน</p>{inv.paidAt ? <><p className="font-semibold text-navy-700">{inv.receiptCode}</p><p className="text-xs text-muted">รับเงิน {thDate(inv.paidAt)}</p></> : <><p className="font-semibold text-warning">ยังไม่ได้รับเงิน</p><ActionForm action={markPaidAction} className="mt-2"><input type="hidden" name="id" value={inv.id} /><SubmitButton className="btn-outline" confirm={`ยืนยันรับเงิน ${baht(inv.total)} สำหรับ ${inv.code}?`}>บันทึกรับเงิน</SubmitButton></ActionForm></>}</div>
+                <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs text-muted">ใบเสร็จรับเงิน</p>{inv.paidAt ? <><p className="font-semibold text-navy-700">{inv.receiptCode}</p><p className="text-xs text-muted">รับเงิน {thDate(inv.paidAt)}</p></> : <><p className="font-semibold text-warning">ยังไม่ได้รับเงิน</p><ActionForm action={markPaidAction} className="mt-2"><input type="hidden" name="id" value={inv.id} /><SubmitButton className="btn-primary" confirm={`ยืนยันรับเงิน ${baht(inv.total)} สำหรับ ${inv.code}?`}>บันทึกรับเงิน</SubmitButton></ActionForm></>}</div>
               </div>
             ) : open && ['packing', 'billing'].includes(stage) ? (
               <ActionForm action={issueInvoiceAction} className="flex flex-wrap items-center gap-3"><input type="hidden" name="id" value={o.id} /><SubmitButton>ออกใบกำกับภาษี</SubmitButton><span className="text-xs text-muted">ใช้ข้อมูลผู้ซื้อจากออเดอร์ · ส่ง e-Tax ได้ที่หน้าบัญชี</span></ActionForm>
@@ -143,7 +152,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         <aside className="space-y-5">
           <section className="card p-5" aria-labelledby="as-h">
             <h2 id="as-h" className="mb-2 font-bold">ผู้รับผิดชอบขั้นนี้</h2>
-            <ActionForm action={assignOrderAction} className="flex gap-2"><input type="hidden" name="id" value={o.id} /><input name="assignee" aria-label="ผู้รับผิดชอบ" defaultValue={o.assignee} placeholder={STAGE_OWNER[stage] || 'ชื่อพนักงาน'} maxLength={60} className="input" /><SubmitButton className="btn-outline">บันทึก</SubmitButton></ActionForm>
+            {!open ? <p className="text-sm text-muted">ออเดอร์ปิดงานแล้ว</p> : <ActionForm action={assignOrderAction} className="flex gap-2"><input type="hidden" name="id" value={o.id} /><input name="assignee" aria-label="ผู้รับผิดชอบ" defaultValue={o.assignee} placeholder={STAGE_OWNER[stage] || 'ชื่อพนักงาน'} maxLength={60} className="input" /><SubmitButton className="btn-outline">บันทึก</SubmitButton></ActionForm>}
           </section>
           <section className="card p-5" aria-labelledby="ev-h">
             <h2 id="ev-h" className="font-bold">ประวัติการดำเนินงาน</h2><p className="mb-3 text-xs text-muted">บันทึกอัตโนมัติทุกการเปลี่ยนขั้นตอน</p>

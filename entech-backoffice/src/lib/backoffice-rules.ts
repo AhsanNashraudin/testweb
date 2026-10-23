@@ -78,10 +78,12 @@ export function agingBucket(dueAt: number, now: number): AgingBucket {
 }
 
 /** เลขเอกสาร PREFIX-ปปดด-ลำดับ (ลำดับเริ่มใหม่ทุกเดือน, ปี พ.ศ. 2 หลัก) */
-export function docCode(prefix: string, now: Date, lastCode: string | undefined) {
+export function docHead(prefix: string, now: Date) {
   const th = new Date(now.getTime() + 7 * 3600e3);
-  const ym = String((th.getUTCFullYear() + 543) % 100).padStart(2, '0') + String(th.getUTCMonth() + 1).padStart(2, '0');
-  const head = `${prefix}-${ym}-`;
+  return `${prefix}-${String((th.getUTCFullYear() + 543) % 100).padStart(2, '0')}${String(th.getUTCMonth() + 1).padStart(2, '0')}-`;
+}
+export function docCode(prefix: string, now: Date, lastCode: string | undefined) {
+  const head = docHead(prefix, now);
   const seq = lastCode?.startsWith(head) ? Number(lastCode.slice(head.length)) + 1 : 1;
   return head + String(seq).padStart(4, '0');
 }

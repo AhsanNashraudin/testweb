@@ -9,4 +9,4 @@ export async function middleware(req: NextRequest) {
 }
 
 // ทุกหน้าต้องล็อกอิน ยกเว้นหน้าเข้าสู่ระบบ, cron (ใช้ CRON_SECRET) และไฟล์ static
-export const config = { matcher: ['/((?!login|api/cron|_next|favicon.ico|icon.png|logo.png).*)'] };
+export const config = { matcher: ['/((?!login|api/cron|_next|favicon.ico|icon.png|logo.png|manifest\\.webmanifest$).*)'] };

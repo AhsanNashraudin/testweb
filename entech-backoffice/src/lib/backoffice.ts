@@ -3,7 +3,7 @@ import 'server-only';
 import { and, desc, eq, inArray, like, notInArray, sql } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { BoError, nowSec } from '@/lib/util';
-import { docCode, lateBy, MAX_SALES_DISCOUNT, nextStage, quoteTotals, shortages, slaHours, splitVat, STAGE_OWNER, STAGE_TH, type Stage } from '@/lib/backoffice-rules';
+import { docCode, docHead, lateBy, MAX_SALES_DISCOUNT, nextStage, quoteTotals, shortages, slaHours, splitVat, STAGE_OWNER, STAGE_TH, type Stage } from '@/lib/backoffice-rules';
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Status = typeof s.orders.$inferSelect.status;
@@ -13,8 +13,10 @@ const DOC = { INV: [s.invoices, s.invoices.code], RC: [s.invoices, s.invoices.re
 /** เลขเอกสารถัดไป เช่น INV-6910-0001 */
 export async function nextDoc(prefix: keyof typeof DOC) {
   const [table, col] = DOC[prefix];
-  const [last] = await db.select({ c: col }).from(table).where(like(col, `${prefix}-%`)).orderBy(desc(col)).limit(1);
-  return docCode(prefix, new Date(), last?.c);
+  // หาเลขล่าสุดเฉพาะของเดือนนี้ เรียงตามความยาวก่อน (กันเลขรูปแบบอื่น เช่น QT-DEMO-… หรือ 4 หลักกับ 5 หลัก)
+  const now = new Date();
+  const [last] = await db.select({ c: col }).from(table).where(like(col, `${docHead(prefix, now)}%`)).orderBy(desc(sql`length(${col})`), desc(col)).limit(1);
+  return docCode(prefix, now, last?.c);
 }
 
 export async function getSetting(key: string, fallback = '') {
@@ -25,6 +27,7 @@ export async function setSetting(key: string, value: string) {
   await db.insert(s.settings).values({ key, value }).onConflictDoUpdate({ target: s.settings.key, set: { value } });
 }
 
+/** stage = ขั้นที่เข้าสู่ (การเปลี่ยนขั้น) · 'note' = บันทึกทั่วไป (ไม่นับในไทม์ไลน์ขั้นตอน) */
 export async function logEvent(orderId: number, stage: string, note: string, by: string, tx: Tx | typeof db = db) {
   await tx.insert(s.orderEvents).values({ orderId, stage, note, by, at: nowSec() });
 }
@@ -77,6 +80,8 @@ export async function advanceOrder(orderId: number, by: string, note = '') {
   const c = await orderContext(orderId);
   const cur = c.o.stage as Stage;
   if (cur === 'received' && c.o.channel === 'web' && c.o.status === 'pending_payment') throw new BoError('ออเดอร์เว็บยังไม่ได้รับชำระเงิน กด "ยืนยันรับชำระ" ก่อนส่งต่อ');
+  // ไม่มีเครดิต = ต้องชำระก่อนส่งของ
+  if (c.o.channel === 'sales' && c.o.creditDays === 0 && c.o.status === 'pending_payment' && (cur === 'received' || cur === 'production')) throw new BoError('ออเดอร์นี้ไม่มีเครดิต (ชำระก่อนส่ง) กด "ยืนยันรับชำระ" ก่อนส่งต่อ');
   if (cur === 'production' && c.openMOs) throw new BoError(`ยังมีใบสั่งผลิตค้าง ${c.openMOs} ใบ`);
   if (cur === 'billing' && !c.invoice) throw new BoError('ยังไม่ได้ออกใบกำกับภาษี');
   if (cur === 'payment' && !c.paid) throw new BoError('ยังไม่ได้รับชำระเงิน');
@@ -112,7 +117,7 @@ export async function confirmPayment(orderId: number, by: string) {
   await setStatus(orderId, 'paid');
   await db.update(s.orders).set({ paidAt: nowSec() }).where(eq(s.orders.id, orderId));
   if (c.invoice && !c.invoice.paidAt) await markPaid(c.invoice.id, by);
-  else await logEvent(orderId, 'payment', 'ยืนยันรับชำระเงินแล้ว', by);
+  else await logEvent(orderId, 'note', 'ยืนยันรับชำระเงินแล้ว', by);
 }
 
 export async function assignOrder(orderId: number, assignee: string, by: string) {
@@ -125,7 +130,7 @@ export async function setTracking(orderId: number, carrier: string, trackingNo: 
   if (!o) throw new BoError('ไม่พบคำสั่งซื้อ', 404);
   if (trackingUrl && !/^https:\/\//.test(trackingUrl)) throw new BoError('ลิงก์ติดตามพัสดุต้องขึ้นต้นด้วย https://');
   await db.update(s.orders).set({ carrier, trackingNo, trackingUrl, statusPending: o.channel === 'web' }).where(eq(s.orders.id, orderId));
-  await logEvent(orderId, 'packing', `บันทึกขนส่ง ${carrier} ${trackingNo}`.trim(), by);
+  await logEvent(orderId, 'note', `บันทึกขนส่ง ${carrier} ${trackingNo}`.trim(), by);
 }
 
 /** ออเดอร์พร้อมสถานะ SLA (ใช้ในแดชบอร์ดและหน้าติดตาม) · shortcut: คำนวณในแอปจาก 1,000 ออเดอร์ล่าสุด, ย้ายไป SQL เมื่อออเดอร์เยอะขึ้น */
@@ -207,7 +212,7 @@ export async function createMO(p: { itemId: number; qty: number; orderId?: numbe
     code, itemId: p.itemId, qty: p.qty, orderId: p.orderId ?? null, line: p.line ?? '', assignee: p.assignee ?? '',
     status: short.length ? 'waiting' : 'queued', dueAt: at + (p.dueDays ?? 3) * 86400, createdAt: at, updatedAt: at, note: shortNote(short),
   }).returning();
-  if (p.orderId) await logEvent(p.orderId, 'production', `เปิดใบสั่งผลิต ${code} จำนวน ${p.qty} ใบ`, p.by);
+  if (p.orderId) await logEvent(p.orderId, 'note', `เปิดใบสั่งผลิต ${code} จำนวน ${p.qty} ใบ`, p.by);
   return mo;
 }
 
@@ -235,11 +240,13 @@ export async function startMO(id: number, by: string) {
 export async function recordOutput(id: number, good: number, reject: number, reason: string, by: string) {
   const [mo] = await db.select().from(s.productionOrders).where(eq(s.productionOrders.id, id));
   if (!mo || mo.status !== 'in_progress') throw new BoError('บันทึกได้เฉพาะใบสั่งผลิตที่กำลังผลิต');
-  if (good < 0 || reject < 0 || good + reject === 0) throw new BoError('กรอกจำนวนที่ผลิตได้');
+  if (good < 0 || reject < 0 || good + reject === 0) throw new BoError('กรอกจำนวนที่ผลิตได้', 400, 'good');
+  const left = mo.qty - mo.goodQty;
+  if (good > left) throw new BoError(`ผ่านทดสอบเกินจำนวนที่เหลือ (เหลือ ${left} ใบ)`, 400, 'good');
   const goodQty = mo.goodQty + good;
   const note = reject ? `${mo.note ? mo.note + ' · ' : ''}ไม่ผ่าน ${reject} ใบ${reason ? ` (${reason})` : ''}` : mo.note;
   await db.update(s.productionOrders).set({ goodQty, rejectQty: mo.rejectQty + reject, note, status: goodQty >= mo.qty ? 'qc' : 'in_progress', updatedAt: nowSec() }).where(eq(s.productionOrders.id, id));
-  if (mo.orderId) await logEvent(mo.orderId, 'production', `${by} บันทึกผลิต ${mo.code} ได้ ${good} ใบ${reject ? ` ไม่ผ่าน ${reject} ใบ` : ''}`, by);
+  if (mo.orderId) await logEvent(mo.orderId, 'note', `${by} บันทึกผลิต ${mo.code} ได้ ${good} ใบ${reject ? ` ไม่ผ่าน ${reject} ใบ` : ''}`, by);
 }
 
 /** ผ่านทดสอบรั่วซึม → รับถังเข้าคลัง (ถ้าผลิตให้ออเดอร์ จะกันไว้ให้ออเดอร์นั้น ไม่เข้ายอดพร้อมขาย) */
@@ -251,7 +258,7 @@ export async function passQC(id: number, by: string) {
     else await moveItem(tx, mo.itemId, mo.goodQty, 'รับจากโรงงาน', mo.code, by);
     await tx.update(s.productionOrders).set({ status: 'done', updatedAt: nowSec() }).where(eq(s.productionOrders.id, id));
   });
-  if (mo.orderId) await logEvent(mo.orderId, 'production', `${mo.code} ผ่านทดสอบรั่วซึม ${mo.goodQty} ใบ เข้าคลังแล้ว`, by);
+  if (mo.orderId) await logEvent(mo.orderId, 'note', `${mo.code} ผ่านทดสอบรั่วซึม ${mo.goodQty} ใบ เข้าคลังแล้ว`, by);
 }
 
 export async function cancelMO(id: number) {
@@ -266,7 +273,7 @@ export async function adjustStock(kind: 'item' | 'material', id: number, delta: 
     const t = kind === 'item' ? s.items : s.materials;
     const [cur] = await tx.select({ stock: t.stock }).from(t).where(eq(t.id, id));
     if (!cur) throw new BoError('ไม่พบรายการ', 404);
-    if (cur.stock + delta < 0) throw new BoError(`ยอดคงเหลือไม่พอ (มี ${cur.stock})`);
+    if (cur.stock + delta < 0) throw new BoError(`ยอดคงเหลือไม่พอ (มี ${cur.stock})`, 400, 'delta');
     if (kind === 'item') return moveItem(tx, id, delta, reason, ref, by);
     await tx.update(s.materials).set({ stock: sql`${s.materials.stock} + ${delta}` }).where(eq(s.materials.id, id));
     await tx.insert(s.stockMoves).values({ kind, itemId: id, qty: delta, reason, ref, by, at: nowSec() });
@@ -296,7 +303,7 @@ export async function issueInvoice(orderId: number, by: string) {
     code, orderId, buyerName: c.o.taxName || c.o.name, buyerTaxId: c.o.taxId, buyerAddress: c.o.taxAddress || [c.o.address, c.o.province, c.o.postcode].filter(Boolean).join(' '),
     buyerEmail: c.o.email, subtotal, vat, total: c.o.total, issuedAt: at, dueAt: at + c.o.creditDays * 86400, paidAt: paidUpfront ? at : 0, receiptCode,
   });
-  await logEvent(orderId, 'billing', `ออกใบกำกับภาษี ${code}${receiptCode ? ` และใบเสร็จ ${receiptCode} (ชำระแล้ว)` : ''}`, by);
+  await logEvent(orderId, 'note', `ออกใบกำกับภาษี ${code}${receiptCode ? ` และใบเสร็จ ${receiptCode} (ชำระแล้ว)` : ''}`, by);
   return code;
 }
 
@@ -309,6 +316,6 @@ export async function markPaid(invoiceId: number, by: string) {
   const [o] = await db.select({ status: s.orders.status }).from(s.orders).where(eq(s.orders.id, inv.orderId));
   if (o?.status === 'pending_payment') await setStatus(inv.orderId, 'paid');
   await db.update(s.orders).set({ paidAt: nowSec() }).where(and(eq(s.orders.id, inv.orderId), eq(s.orders.paidAt, 0)));
-  await logEvent(inv.orderId, 'payment', `รับชำระ ${inv.code} ออกใบเสร็จ ${receiptCode}`, by);
+  await logEvent(inv.orderId, 'note', `รับชำระ ${inv.code} ออกใบเสร็จ ${receiptCode}`, by);
   return receiptCode;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { agingBucket, docCode, lateBy, nextStage, quoteTotals, shortages, splitVat } from '@/lib/backoffice-rules';
+import { agingBucket, docCode, docHead, lateBy, nextStage, quoteTotals, shortages, splitVat } from '@/lib/backoffice-rules';
 
 describe('nextStage', () => {
   it('ข้ามผลิตเมื่อไม่มีใบสั่งผลิต และข้ามรับเงินเมื่อจ่ายแล้ว', () => {
@@ -52,6 +52,9 @@ it('docCode รันเลขต่อเนื่องและเริ่�
   expect(docCode('INV', oct, undefined)).toBe('INV-6910-0001');
   expect(docCode('INV', oct, 'INV-6910-0041')).toBe('INV-6910-0042');
   expect(docCode('INV', oct, 'INV-6909-0099')).toBe('INV-6910-0001');
+  // เลขรูปแบบอื่น (เช่น ข้อมูลตัวอย่าง QT-DEMO-0031) ต้องไม่ทำให้เลขวนกลับไป 0001 ซ้ำ — nextDoc ค้นด้วย docHead เท่านั้น
+  expect(docHead('QT', oct)).toBe('QT-6910-');
+  expect('QT-DEMO-0031'.startsWith(docHead('QT', oct))).toBe(false);
 });
 
 import { tankKg } from '../../src/lib/factory';

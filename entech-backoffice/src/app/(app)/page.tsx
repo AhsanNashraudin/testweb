@@ -41,6 +41,16 @@ export default async function Dashboard() {
         <Link href="/quotes" className="btn-outline">ใบเสนอราคาที่กำลังเสนอ ({newQuotes.n})</Link><Link href="/quotes?new=1" className="btn-primary">+ ใบเสนอราคาใหม่</Link>
       </PageHead>
 
+      <nav aria-label="เริ่มงานตามหน้าที่" className="card p-4">
+        <p className="mb-2 text-sm text-muted">ระบบหลังบ้านสำหรับพนักงาน ENTECH — เริ่มงานตามหน้าที่ของคุณ</p>
+        <ul className="grid grid-cols-2 gap-2 lg:grid-cols-4">{[
+          ['ฝ่ายขาย', 'เปิดใบเสนอราคา → ออเดอร์', '/quotes?new=1'],
+          ['โรงงาน', 'บันทึกผลผลิตบนมือถือ', '/production/m'],
+          ['คลังสินค้า', 'รับเข้า / ปรับยอดสต็อก', '/inventory#adj-h'],
+          ['บัญชี', 'ออกใบกำกับ / รับเงิน', '/accounting?f=unpaid'],
+        ].map(([role, job, href]) => <li key={role}><Link href={href} className="flex min-h-11 flex-col justify-center rounded-xl border border-slate-200 px-3 py-2 hover:border-navy-700"><b className="text-sm text-navy-700">{role} →</b><span className="text-xs text-muted">{job}</span></Link></li>)}</ul>
+      </nav>
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="ยอดขายเดือนนี้" value={baht(cur.sum)} note={prev.sum ? `${delta >= 0 ? '+' : ''}${delta}% จากเดือนก่อน` : 'ยังไม่มีข้อมูลเดือนก่อน'} tone={delta >= 0 ? 'ok' : 'bad'} />
         <Stat label="ออเดอร์ที่กำลังดำเนินการ" value={String(orders.length)} note={`รอแพ็ค/ส่ง ${pipe.find((p) => p.st === 'packing')?.n ?? 0} รายการ`} href="/tracking" />
@@ -54,13 +64,13 @@ export default async function Dashboard() {
             <div><h2 id="chart-h" className="font-bold">ยอดขายรายเดือน</h2><p className="text-xs text-muted">ปี {y + 543} แยกตามช่องทาง</p></div>
             <div className="flex gap-4 text-xs text-muted"><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-sm bg-success" />เว็บไซต์</span><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-sm bg-navy-700" />ทีมเซลล์</span></div>
           </div>
-          <div className="flex h-56 items-end justify-between gap-1.5" role="img" aria-label="กราฟยอดขายรายเดือน">
+          <div className="flex h-44 items-end justify-between gap-0.5 sm:gap-1.5" role="img" aria-label="กราฟยอดขายรายเดือน">
             {series.map((x, i) => (
-              <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5" title={`${MONTHS[i]}: เว็บ ${baht(x.web)} · เซลล์ ${baht(x.sales)}`}>
+              <div key={i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5" title={`${MONTHS[i]}: เว็บ ${baht(x.web)} · เซลล์ ${baht(x.sales)}`}>
                 <div className="flex w-full max-w-8 flex-col justify-end overflow-hidden rounded-md" style={{ height: `${((x.web + x.sales) / max) * 100}%` }}>
                   <div className="bg-navy-700" style={{ flexGrow: x.sales }} /><div className="bg-success" style={{ flexGrow: x.web }} />
                 </div>
-                <span className={`text-xs ${i === m ? 'font-bold text-ink' : 'text-muted'}`}>{MONTHS[i]}</span>
+                <span className={`text-xs ${i === m ? 'font-bold text-ink' : `text-muted ${i % 2 ? 'max-sm:invisible' : ''}`}`}>{MONTHS[i]}</span>
               </div>
             ))}
           </div>
@@ -69,7 +79,7 @@ export default async function Dashboard() {
         <section className="card p-5" aria-labelledby="pipe-h">
           <h2 id="pipe-h" className="font-bold">ออเดอร์ตามขั้นตอน</h2><p className="mb-4 text-xs text-muted">{orders.length} ออเดอร์ที่ยังไม่ปิดงาน</p>
           <ul className="space-y-4">{pipe.map((p) => (
-            <li key={p.st}><Link href={`/tracking?stage=${p.st}`} className="block">
+            <li key={p.st}><Link href={`/tracking?stage=${p.st}`} className="block rounded-lg py-1 hover:bg-slate-50">
               <div className="mb-1.5 flex items-center gap-2 text-sm"><span className="flex-1 font-medium">{STAGE_TH[p.st]}</span>{p.late > 0 && <Badge tone="bad">เกิน {p.late}</Badge>}<b>{p.n}</b></div>
               <div className="h-2 rounded-full bg-slate-100"><div className={`h-2 rounded-full ${p.late ? 'bg-sale' : 'bg-navy-700'}`} style={{ width: `${orders.length ? (p.n / orders.length) * 100 : 0}%` }} /></div>
             </Link></li>
@@ -79,15 +89,15 @@ export default async function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_380px] [&>*]:min-w-0">
         <section className="card p-5" aria-labelledby="late-h">
-          <div className="mb-3 flex items-center justify-between"><div><h2 id="late-h" className="font-bold">งานเกินกำหนด</h2><p className="text-xs text-muted">เรียงจากเกินนานที่สุด</p></div><Link href="/tracking?f=late" className="text-sm font-semibold text-navy-700">ดูทั้งหมด →</Link></div>
-          {late.length ? <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-sm">
-            <thead className="bg-slate-50 text-left text-xs text-muted"><tr><th className="rounded-l-lg p-2.5">ออเดอร์</th><th>ลูกค้า</th><th>ค้างที่</th><th>ผู้รับผิดชอบ</th><th className="rounded-r-lg p-2.5 text-right">เกินกำหนด</th></tr></thead>
+          <div className="mb-3 flex items-center justify-between"><div><h2 id="late-h" className="font-bold">งานเกินกำหนด</h2><p className="text-xs text-muted">เรียงจากเกินนานที่สุด</p></div><Link href="/tracking?f=late" className="inline-flex min-h-11 items-center text-sm font-semibold text-navy-700">ดูทั้งหมด →</Link></div>
+          {late.length ? <div className="overflow-x-auto"><table className="w-full min-w-[460px] text-sm">
+            <thead className="bg-slate-50 text-left text-xs text-muted"><tr><th className="rounded-l-lg p-2.5">ออเดอร์</th><th>เกินกำหนด</th><th>ค้างที่</th><th>ลูกค้า</th><th className="hidden rounded-r-lg xl:table-cell">ผู้รับผิดชอบ</th></tr></thead>
             <tbody>{late.slice(0, 6).map((o) => (
-              <tr key={o.id} className="border-b border-slate-100"><td className="p-2.5"><Link href={`/orders/${o.id}`} className="font-semibold text-navy-700">{o.code}</Link></td><td>{o.name}</td><td>{STAGE_TH[o.stage as Stage]}</td><td className="text-muted">{o.owner}</td><td className="p-2.5 text-right"><Badge tone="bad">เกิน {durationTh(o.late)}</Badge></td></tr>
+              <tr key={o.id} className="border-b border-slate-100"><td className="p-2.5"><Link href={`/orders/${o.id}`} className="font-semibold text-navy-700 underline">{o.code}</Link></td><td><Badge tone="bad">เกิน {durationTh(o.late)}</Badge></td><td>{STAGE_TH[o.stage as Stage]}</td><td>{o.name}</td><td className="hidden text-muted xl:table-cell">{o.owner}</td></tr>
             ))}</tbody></table></div> : <Empty>ไม่มีงานเกินกำหนด ทุกขั้นตอนเดินตามเวลา</Empty>}
         </section>
         <section className="card p-5" aria-labelledby="low-h">
-          <div className="mb-3 flex items-center justify-between"><h2 id="low-h" className="font-bold">ต่ำกว่าจุดสั่ง</h2><Link href="/inventory?f=low" className="text-sm font-semibold text-navy-700">ไปหน้าคลัง →</Link></div>
+          <div className="mb-3 flex items-center justify-between"><h2 id="low-h" className="font-bold">ต่ำกว่าจุดสั่ง</h2><Link href="/inventory?f=low" className="inline-flex min-h-11 items-center text-sm font-semibold text-navy-700">ไปหน้าคลัง →</Link></div>
           {lowCount ? <ul className="divide-y divide-slate-100 text-sm">
             {lowV.map((l) => <li key={l.sku} className="flex justify-between gap-3 py-2"><span>{l.name} {l.v}<span className="block text-xs text-muted">{l.sku}</span></span><span className="text-right"><b className={l.stock > 0 ? 'text-warning' : 'text-sale'}>{l.stock < 0 ? `ขาด ${-l.stock}` : l.stock} ใบ</b><span className="block text-xs text-muted">จุดสั่ง {l.rp}</span></span></li>)}
             {lowM.map((x) => <li key={x.sku} className="flex justify-between gap-3 py-2"><span>{x.name}<span className="block text-xs text-muted">วัตถุดิบ · {x.sku}</span></span><span className="text-right"><b className="text-sale">{x.stock.toLocaleString('th-TH')} {x.unit}</b><span className="block text-xs text-muted">จุดสั่ง {x.reorderPoint.toLocaleString('th-TH')}</span></span></li>)}

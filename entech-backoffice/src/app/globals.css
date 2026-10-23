@@ -19,8 +19,8 @@
   --color-ink: #1b2430;
   --color-muted: #45556c; /* ข้อความรอง (≥ 6.6:1 บนทุกพื้นอ่อน) */
   --color-sale: #c62828;
-  --color-line: #06c755; /* เขียว LINE ทางการ (ลูกค้าขอ) */
-  --color-line-dark: #05a647;
+  --color-line: #05873e; /* เขียว LINE เข้ม ให้ตรงกับหน้าร้าน (ตัวขาวบนพื้น ≥ 4.5:1) */
+  --color-line-dark: #046c32;
   --color-success: #15803d;
   --color-success-50: #f0fdf4;
   --color-warning: #92400e;
@@ -37,7 +37,8 @@ html { scroll-padding-top: 1rem; }
     --text-2xl: 1.375rem; --text-3xl: 1.625rem; --text-4xl: 1.875rem;
   }
   body { font-size: 0.9375rem; line-height: 1.55; }
-  input, select, textarea { font-size: 16px !important; }
+  /* อย่างน้อย 16px กัน iOS ซูม แต่ขยายตามตัวอักษรที่ผู้ใช้ตั้ง · .num-big = ช่องตัวเลขใหญ่ (หน้าโรงงานมือถือ) */
+  input:not(.num-big), select, textarea { font-size: max(16px, 1em) !important; }
 }
 @media (min-width: 768px) { html { scroll-padding-top: 9rem; } }
 body { @apply bg-white text-ink antialiased; }
@@ -46,6 +47,14 @@ a, button, label, summary, input, select, textarea { touch-action: manipulation;
 h1, h2, h3 { text-wrap: balance; }
 /* ราคา/ตัวเลขในตารางเรียงหลักตรงกัน */
 table { font-variant-numeric: tabular-nums; }
+/* ทุกเซลล์ตารางมีระยะซ้ายขวา (คลาส p-3/px-* ในหน้ายังทับได้) กันตัวเลขติดกัน เช่น "CW-1000฿2,600" */
+@layer base {
+  th, td { padding-inline: 0.75rem; }
+  /* ลิงก์เลขเอกสารในตาราง: พื้นที่แตะสูงอย่างน้อย 40px */
+  td > a:first-child { display: inline-flex; min-height: 2.5rem; align-items: center; }
+  /* หัวการ์ดแยกจากเนื้อหา 14px ให้ชัด (คลาสขนาดในหน้าทับได้) */
+  h2 { font-size: var(--text-lg); }
+}
 /* ผู้ใช้ที่ตั้งค่าลดการเคลื่อนไหว: ปิดแอนิเมชัน/การเลื่อนนุ่ม */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -54,13 +63,13 @@ button:not(:disabled), summary, select { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--color-cyan-600); outline-offset: 2px; }
 
 @utility container-x { @apply mx-auto w-full max-w-[1200px] px-4; }
-@utility btn { @apply inline-flex min-h-11 max-w-full items-center text-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 disabled:cursor-not-allowed disabled:opacity-50; }
+@utility btn { @apply inline-flex min-h-11 max-w-full items-center text-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 active:scale-[.98] active:brightness-95 disabled:cursor-not-allowed disabled:!border-slate-300 disabled:!bg-slate-200 disabled:!text-slate-600 disabled:active:scale-100; }
 @utility btn-primary { @apply btn bg-navy-700 text-white hover:bg-navy-900; }
 @utility btn-cyan { @apply btn bg-cyan-700 text-white hover:bg-navy-700; }
 @utility btn-outline { @apply btn border-[1.5px] border-navy-700 bg-white text-navy-700 hover:bg-navy-50; }
 @utility btn-line { @apply btn bg-line font-bold text-white shadow-sm hover:bg-line-dark; }
 @utility btn-danger { @apply btn border-[1.5px] border-sale/40 bg-white text-sale hover:bg-danger-50; }
-@utility input { @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-base outline-none placeholder:text-slate-500 focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/40 aria-invalid:border-sale md:text-sm; }
+@utility input { @apply min-h-11 w-full rounded-lg border border-slate-400 bg-white px-3.5 py-2.5 text-base outline-none placeholder:text-slate-500 focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/40 aria-invalid:border-sale md:text-sm; }
 @utility label { @apply mb-1.5 block text-sm font-medium; }
 @utility card { @apply rounded-2xl border border-slate-200 bg-white; }
 @utility err { @apply mt-1 text-sm text-sale; }

@@ -11,7 +11,7 @@ import { issueInvoiceAction, markPaidAction, setEtaxAction } from '../actions';
 import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'บัญชี & e-Tax' };
-const AGE_COLOR: Record<AgingBucket, string> = { current: 'bg-success', d30: 'bg-warning', d60: 'bg-sale', d90: 'bg-ink' };
+const AGE_COLOR: Record<AgingBucket, string> = { current: 'bg-success', d30: 'bg-amber-400', d60: 'bg-sale', d90: 'bg-ink' };
 
 export default async function Accounting({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
   await requireUser();
@@ -78,7 +78,7 @@ export default async function Accounting({ searchParams }: { searchParams: Promi
           <section className="card p-5" aria-labelledby="etax-h">
             <h2 id="etax-h" className="font-bold">ระบบ e-Tax Invoice</h2>
             <div className="mt-2"><Badge tone="warn">ยังไม่เชื่อมผู้ให้บริการ</Badge></div>
-            <p className="mt-3 text-sm text-muted">ตอนนี้บันทึกสถานะ e-Tax ด้วยมือ เมื่อเลือกแบบ (Time Stamp / เต็มรูปแบบ หรือผ่าน Bplus) และได้บัญชีผู้ให้บริการแล้ว ระบบจะส่งและอัปเดตสถานะให้อัตโนมัติ</p>
+            <p className="mt-3 text-sm text-muted">ตอนนี้บันทึกสถานะ e-Tax ด้วยมือ เมื่อเลือกแบบ (แบบประทับเวลา Time Stamp, แบบเต็มรูปแบบ หรือผ่าน Bplus) และได้บัญชีผู้ให้บริการแล้ว ระบบจะส่งและอัปเดตสถานะให้อัตโนมัติ</p>
             {failed && <div className="mt-4 rounded-xl border border-sale/40 bg-danger-50 p-3 text-sm"><p className="font-semibold text-sale">{failed.inv.code} ส่งไม่สำเร็จ</p><p className="text-muted">ตรวจอีเมลผู้ซื้อ ({failed.inv.buyerEmail || 'ไม่มีอีเมล'}) แล้วส่งใหม่</p></div>}
           </section>
           <section className="card p-5" aria-labelledby="age-h">

@@ -31,7 +31,13 @@ async function api<T>(path: string, init?: RequestInit): Promise<{ status: numbe
     headers: { Authorization: `Bearer ${process.env.WEB_API_KEY}`, 'Content-Type': 'application/json', ...init?.headers },
   });
   const body = await res.json().catch(() => ({}));
-  if (res.status >= 400 && res.status !== 207) throw new Error(`เว็บตอบ ${res.status}: ${JSON.stringify(body).slice(0, 200)}`);
+  if (res.status >= 400 && res.status !== 207) {
+    // แปลงคำตอบของเว็บเป็นข้อความที่พนักงานอ่านได้ (ไม่โชว์ JSON ดิบ)
+    const b = body as { data?: { sku?: string; message?: string }[]; error?: string; message?: string };
+    const perSku = Array.isArray(b.data) ? b.data.filter((x) => x.message).slice(0, 5).map((x) => `${x.sku}: ${x.message}`).join(' · ') : '';
+    const why = perSku || b.error || b.message || '';
+    throw new Error(res.status === 401 ? 'เว็บไม่ยอมรับคีย์ (WEB_API_KEY ไม่ตรงกับ STOCK_API_KEY ของเว็บ)' : `เว็บไม่รับข้อมูล (รหัส ${res.status})${why ? ` — ${String(why).slice(0, 300)}` : ''}`);
+  }
   return { status: res.status, body: body as T };
 }
 
@@ -90,7 +96,7 @@ async function upsertOrder(w: WebOrder) {
   }
   if (w.status === 'paid' && cur.status === 'pending_payment') {
     await db.update(s.orders).set({ status: 'paid', paidAt: nowSec() }).where(eq(s.orders.id, cur.id));
-    await logEvent(cur.id, 'payment', 'เว็บไซต์ยืนยันรับชำระเงินแล้ว', SYS);
+    await logEvent(cur.id, 'note', 'เว็บไซต์ยืนยันรับชำระเงินแล้ว', SYS);
     return 'updated';
   }
   return 'same';

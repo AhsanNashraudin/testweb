@@ -53,7 +53,7 @@ export default async function Tracking({ searchParams }: { searchParams: SP }) {
               <td><span className="font-medium">{o.name}</span><span className="mt-1 block"><Badge tone={o.channel === 'web' ? 'ok' : 'neutral'}>{o.channel === 'web' ? 'เว็บไซต์' : 'เซลล์'}</Badge></span></td>
               <td><StageBar stage={o.stage as Stage} late={o.late > 0} /><span className={`mt-1.5 block text-xs ${o.late ? 'font-semibold text-sale' : 'text-muted'}`}>{STAGE_TH[o.stage as Stage]}</span></td>
               <td>{o.stage === 'done' || o.stage === 'cancelled' ? <span className="text-muted">—</span> : <><span className="font-medium">{o.owner}</span>{o.assignee && <span className="block text-xs text-muted">{STAGE_TH[o.stage as Stage]}</span>}</>}</td>
-              <td>{o.stage === 'done' ? '—' : <><span className={`font-medium ${o.late ? 'text-sale' : ''}`}>{durationTh(o.inStage)}</span><span className="block text-xs text-muted">{o.channel === 'sales' && o.stage === 'payment' ? `เครดิต ${o.creditDays} วัน` : `SLA ${durationTh(o.sla * 3600)}`}</span></>}</td>
+              <td>{o.stage === 'done' ? '—' : <><span className={`font-medium ${o.late ? 'text-sale' : ''}`}>{durationTh(o.inStage)}</span><span className="block text-xs text-muted">{o.channel === 'sales' && o.stage === 'payment' ? `เครดิต ${o.creditDays} วัน` : `เป้าหมาย ${durationTh(o.sla * 3600)}`}</span></>}</td>
               <td className="p-3">{o.stage === 'done' ? <Badge tone="ok">จบงาน</Badge> : o.stage === 'cancelled' ? <Badge tone="neutral">ยกเลิก</Badge> : o.late ? <Badge tone="bad">เกิน {durationTh(o.late)}</Badge> : <Badge tone="info">ตามกำหนด</Badge>}</td>
             </tr>
           ))}</tbody>

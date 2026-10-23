@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type NavItem = { href: string; label: string; group: string; icon: string; badge?: number };
 // ไอคอนเส้น 24px (path d) — ไม่ต้องลง icon library เพิ่ม
@@ -24,11 +24,22 @@ const isOn = (path: string, h: string) => (h === '/' ? path === '/' : path === h
 export function SideNav({ items }: { items: NavItem[] }) {
   const path = usePathname();
   const ref = useRef<HTMLDetailsElement>(null);
-  useEffect(() => { if (ref.current) ref.current.open = false; }, [path]);
+  const [open, setOpen] = useState(false);
+  const close = (focus = false) => { if (ref.current?.open) { ref.current.open = false; if (focus) ref.current.querySelector('summary')?.focus(); } };
+  useEffect(() => close(), [path]);
+  // เมนูมือถือ: ปิดเมื่อกด Esc หรือแตะนอกเมนู
+  useEffect(() => {
+    if (!open) return;
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') close(true); };
+    const down = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) close(); };
+    document.addEventListener('keydown', key);
+    document.addEventListener('pointerdown', down);
+    return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', down); };
+  }, [open]);
   const list = items.map((i, n) => (
     <div key={i.href}>
-      {i.group !== items[n - 1]?.group && <p className={`px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-navy-100/70 ${n ? 'pt-5' : ''}`}>{i.group}</p>}
-      <Link href={i.href} aria-current={isOn(path, i.href) ? 'page' : undefined}
+      {i.group !== items[n - 1]?.group && <p className={`px-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-navy-100/70 ${n ? 'pt-5' : ''}`}>{i.group}</p>}
+      <Link href={i.href} onClick={() => close()} aria-current={isOn(path, i.href) ? 'page' : undefined}
         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${isOn(path, i.href) ? 'bg-white font-semibold text-navy-900 shadow-sm' : 'text-navy-50 hover:bg-white/10'}`}>
         <Icon name={i.icon} /><span className="flex-1">{i.label}</span>
         {!!i.badge && <span className="rounded-full bg-sale px-2 text-xs font-bold text-white">{i.badge}</span>}
@@ -38,8 +49,9 @@ export function SideNav({ items }: { items: NavItem[] }) {
   return (
     <>
       <nav aria-label="เมนูหลัก" className="hidden space-y-0.5 md:block">{list}</nav>
-      <details ref={ref} className="md:hidden">
-        <summary className="flex h-11 list-none items-center gap-2 rounded-lg border border-navy-600 px-3 text-sm [&::-webkit-details-marker]:hidden">☰ {items.find((i) => isOn(path, i.href))?.label ?? 'เมนู'}</summary>
+      <details ref={ref} className="min-w-0 md:hidden" onToggle={(e) => setOpen(e.currentTarget.open)}>
+        <summary aria-expanded={open} aria-label={`${open ? 'ปิด' : 'เปิด'}เมนู`} className="flex min-h-11 min-w-0 cursor-pointer list-none items-center gap-2 rounded-lg border border-navy-600 px-3 text-sm [&::-webkit-details-marker]:hidden">
+          <span aria-hidden className="w-4 shrink-0 text-center">{open ? '✕' : '☰'}</span><span className="truncate">{items.find((i) => isOn(path, i.href))?.label ?? 'เมนู'}</span></summary>
         <nav aria-label="เมนูหลัก (มือถือ)" className="absolute inset-x-0 top-full z-50 space-y-0.5 bg-navy-900 p-3 shadow-xl">{list}</nav>
       </details>
     </>

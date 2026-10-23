@@ -1,5 +1,6 @@
 /** ฐานข้อมูลหลังบ้าน ENTECH (แยกจากเว็บไซต์) · เว็บเชื่อมผ่าน Stock API v1 โดยใช้ SKU / เลขออเดอร์เป็นกุญแจ */
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -175,4 +176,4 @@ export const invoices = sqliteTable('invoices', {
   receiptCode: text('receipt_code').notNull().default(''),
   etaxStatus: text('etax_status', { enum: ['pending', 'sent', 'certified', 'failed'] }).notNull().default('pending'),
   etaxNote: text('etax_note').notNull().default(''),
-});
+}, (t) => [uniqueIndex('invoices_receipt_code_uq').on(t.receiptCode).where(sql`${t.receiptCode} <> ''`)]);

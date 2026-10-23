@@ -9,7 +9,7 @@ import { adjustStockAction, setReorderAction } from '../actions';
 import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'คลังสินค้า' };
-type SP = Promise<{ tab?: string; f?: string; q?: string; page?: string }>;
+type SP = Promise<{ tab?: string; f?: string; q?: string; page?: string; item?: string }>;
 const PER = 25;
 
 function Level({ stock, rp }: { stock: number; rp: number }) {
@@ -20,11 +20,11 @@ function Level({ stock, rp }: { stock: number; rp: number }) {
   );
 }
 const statusOf = (stock: number, reserved: number, rp: number) =>
-  stock <= 0 && reserved ? <Badge tone="warn">จองหมดแล้ว</Badge> : stock <= 0 ? <Badge tone="bad">หมด</Badge> : rp && stock <= rp ? <Badge tone="bad">ต่ำกว่าจุดสั่ง</Badge> : <Badge tone="ok">ปกติ</Badge>;
+  stock <= 0 && reserved ? <Badge tone="warn">จองหมดแล้ว</Badge> : stock <= 0 ? <Badge tone="bad">หมด</Badge> : rp && stock <= rp ? <Badge tone="warn">ต่ำกว่าจุดสั่ง</Badge> : <Badge tone="ok">ปกติ</Badge>;
 
 export default async function Inventory({ searchParams }: { searchParams: SP }) {
   await requireUser();
-  const { tab = 'product', f = '', q = '', page = '1' } = await searchParams;
+  const { tab = 'product', f = '', q = '', page = '1', item } = await searchParams;
   const [variants, materials, reserved, moves, [{ openMO }]] = await Promise.all([
     db.select({ id: s.items.id, sku: s.items.sku, v: s.items.variantName, name: s.items.productName, stock: s.items.stock, rp: s.items.reorderPoint, price: s.items.price, pending: s.items.pushPending })
       .from(s.items).orderBy(s.items.category, s.items.productName, s.items.sku),
@@ -47,7 +47,7 @@ export default async function Inventory({ searchParams }: { searchParams: SP }) 
   return (
     <div className="space-y-6">
       <PageHead title="คลังสินค้า" sub="ถังสำเร็จรูปและวัตถุดิบ · ยอดพร้อมขายใช้ร่วมกับเว็บไซต์และทีมเซลล์">
-        <Link href="/inventory/new" className="btn-outline">+ เพิ่ม SKU</Link><Link href="/production" className="btn-primary">สั่งผลิตเพิ่ม</Link>
+        <a href="#adj-h" className="btn-primary">รับเข้า / ปรับยอด</a><Link href="/inventory/new" className="btn-outline">+ เพิ่ม SKU</Link><Link href="/production#new-mo" className="btn-outline">สั่งผลิตเพิ่ม</Link>
       </PageHead>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="มูลค่าสต็อก (โดยประมาณ)" value={baht(value)} note="ถังคิดราคาขาย · วัตถุดิบคิดต้นทุน" />
@@ -58,10 +58,10 @@ export default async function Inventory({ searchParams }: { searchParams: SP }) 
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs current={tab} items={[{ key: 'product', label: 'ถังสำเร็จรูป', href: href({ tab: 'product' }) }, { key: 'material', label: 'วัตถุดิบ', href: href({ tab: 'material' }) }]} />
-        {tab === 'product' && <form className="flex gap-2" role="search"><input type="hidden" name="tab" value="product" />{f && <input type="hidden" name="f" value={f} />}<input name="q" defaultValue={q} aria-label="ค้นหาสินค้า" placeholder="ค้นหา SKU หรือชื่อสินค้า" className="input w-64" /><button className="btn-outline">ค้นหา</button></form>}
+        {tab === 'product' && <form className="flex w-full flex-wrap gap-2 sm:w-auto" role="search"><input type="hidden" name="tab" value="product" />{f && <input type="hidden" name="f" value={f} />}<input name="q" defaultValue={q} aria-label="ค้นหาสินค้า" placeholder="ค้นหา SKU หรือชื่อสินค้า" className="input min-w-0 flex-1 sm:w-64 sm:flex-none" /><button className="btn-outline">ค้นหา</button></form>}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_340px] [&>*]:min-w-0">
+      <div className="grid gap-5 2xl:grid-cols-[1fr_340px] [&>*]:min-w-0">
         <div className="card overflow-x-auto">
           {tab === 'material' ? (
             <table className="w-full min-w-[720px] text-sm">
@@ -88,22 +88,22 @@ export default async function Inventory({ searchParams }: { searchParams: SP }) 
           {tab === 'product' && pages > 1 && (
             <nav aria-label="หน้า" className="flex items-center justify-between gap-2 border-t border-slate-100 p-3 text-sm">
               <span className="text-muted">แสดง {(pg - 1) * PER + 1}–{Math.min(pg * PER, list.length)} จาก {list.length} รุ่น</span>
-              <span className="flex gap-2">{pg > 1 && <Link href={href({ page: String(pg - 1) })} className="btn-outline min-h-10 px-4">ก่อนหน้า</Link>}{pg < pages && <Link href={href({ page: String(pg + 1) })} className="btn-outline min-h-10 px-4">ถัดไป</Link>}</span>
+              <span className="flex gap-2">{pg > 1 && <Link href={href({ page: String(pg - 1) })} className="btn-outline px-4">ก่อนหน้า</Link>}{pg < pages && <Link href={href({ page: String(pg + 1) })} className="btn-outline px-4">ถัดไป</Link>}</span>
             </nav>
           )}
           {tab === 'product' && <p className="border-t border-slate-100 p-3 text-xs text-muted">“พร้อมขาย” = คงเหลือจริง − จองแล้ว · ตัวเลขนี้ส่งขึ้นเว็บไซต์ทุกรอบซิงค์ (5 นาที) · คลิกชื่อสินค้าเพื่อแก้ราคา · ตั้งจุดสั่งรายรุ่นได้ที่แผงด้านขวา</p>}
         </div>
 
         <aside className="space-y-5">
-          <section className="card p-5" aria-labelledby="adj-h">
-            <h2 id="adj-h" className="font-bold">รับเข้า / ปรับยอด</h2>
+          <section className="card scroll-mt-4 p-5" aria-labelledby="adj-h" id="adjust">
+            <h2 id="adj-h" className="scroll-mt-4 font-bold">รับเข้า / ปรับยอด</h2>
             <p className="mb-3 text-xs text-muted">ใส่จำนวนติดลบเพื่อตัดออก ทุกครั้งบันทึกเหตุผลและเอกสารอ้างอิง</p>
-            <ActionForm action={adjustStockAction} resetOnSuccess className="space-y-3">
+            <ActionForm action={adjustStockAction} resetOnSuccess={["itemId", "kind"]} className="space-y-3">
               <input type="hidden" name="kind" value={tab === 'material' ? 'material' : 'item'} />
               <div><label htmlFor="item" className="label">{tab === 'material' ? 'วัตถุดิบ' : 'สินค้า'}</label>
-                <select id="item" name="itemId" className="input">{tab === 'material' ? materials.map((m) => <option key={m.id} value={m.id}>{m.name}</option>) : variants.map((v) => <option key={v.id} value={v.id}>{v.sku} · {v.name} {v.v}</option>)}</select></div>
+                <select id="item" name="itemId" className="input" defaultValue={item ?? (tab !== "material" && list.length === 1 ? String(list[0].id) : undefined)}>{tab === 'material' ? materials.map((m) => <option key={m.id} value={m.id}>{m.name}</option>) : variants.map((v) => <option key={v.id} value={v.id}>{v.sku} · {v.name} {v.v}</option>)}</select></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label htmlFor="delta" className="label">จำนวน (+/−)</label><input id="delta" name="delta" type="number" step="any" required placeholder="+20" className="input" /></div>
+                <div><label htmlFor="delta" className="label">จำนวน (+/−)</label><input id="delta" name="delta" type="number" step="any" min={-100000} max={100000} required placeholder="+20" className="input" /></div>
                 <div><label htmlFor="ref" className="label">เลขเอกสาร</label><input id="ref" name="ref" maxLength={60} placeholder="PO-6910-0021" className="input" /></div>
               </div>
               <div><label htmlFor="reason" className="label">เหตุผล</label><input id="reason" name="reason" list="reasons" required maxLength={80} className="input" />
@@ -125,7 +125,7 @@ export default async function Inventory({ searchParams }: { searchParams: SP }) 
               const mat = m.kind === 'material' ? mName.get(m.itemId) : undefined;
               return (
                 <li key={m.id} className="flex justify-between gap-3"><span><span className="block font-medium">{m.reason}{m.ref && ` ${m.ref}`}</span><span className="text-xs text-muted">{mat ? mat.name : vName.get(m.itemId)} · {m.by} · {thDateTime(m.at)}</span></span>
-                  <b className={`whitespace-nowrap ${m.qty > 0 ? 'text-success' : 'text-ink'}`}>{m.qty > 0 ? '+' : '−'}{Math.abs(m.qty).toLocaleString('th-TH')}{mat ? ` ${mat.unit}` : ''}</b></li>
+                  <b className={`whitespace-nowrap ${m.qty > 0 ? 'text-success' : 'text-ink'}`}>{m.qty > 0 ? '+' : m.qty < 0 ? '−' : ''}{Math.abs(m.qty).toLocaleString('th-TH')}{mat ? ` ${mat.unit}` : ''}</b></li>
               );
             })}</ul> : <p className="text-sm text-muted">ยังไม่มีความเคลื่อนไหว เริ่มจากรับสินค้าเข้าหรือเริ่มผลิต</p>}
           </section>

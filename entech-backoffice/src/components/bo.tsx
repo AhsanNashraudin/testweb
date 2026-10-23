@@ -61,4 +61,6 @@ export function Tabs({ items, current }: { items: { key: string; label: string; 
 }
 
 export const thDate = (sec: number) => (sec ? new Date(sec * 1000).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'Asia/Bangkok' }) : '—');
+/** วันที่เต็มมีปี พ.ศ. สำหรับเอกสาร */
+export const thDateFull = (sec: number) => (sec ? new Date(sec * 1000).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '—');
 export const thDateTime = (sec: number) => new Date(sec * 1000).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });

@@ -7,13 +7,15 @@ import { quoteTotals } from '@/lib/backoffice-rules';
 import { QUOTE_STATUS_TH, QUOTE_TONE } from '@/lib/status';
 import { Badge, Empty, PageHead, Tabs, thDate } from '@/components/bo';
 import { createQuoteAction } from '../actions';
+import { ActionForm, SubmitButton } from '@/components/action-form';
+import { Disclosure } from '@/components/disclosure';
 import { requireUser } from '@/lib/admin';
 
 export const metadata = { title: 'ใบเสนอราคา' };
 
-export default async function Quotes({ searchParams }: { searchParams: Promise<{ f?: string; new?: string; err?: string }> }) {
+export default async function Quotes({ searchParams }: { searchParams: Promise<{ f?: string; new?: string }> }) {
   await requireUser();
-  const { f = 'open', new: showNew, err } = await searchParams;
+  const { f = 'open', new: showNew } = await searchParams;
   const [rows, lines, vatIn] = await Promise.all([
     db.select({ q: s.quotes, orderCode: s.orders.code }).from(s.quotes).leftJoin(s.orders, eq(s.orders.id, s.quotes.orderId)).orderBy(desc(s.quotes.id)).limit(300),
     db.select().from(s.quoteItems),
@@ -25,19 +27,21 @@ export default async function Quotes({ searchParams }: { searchParams: Promise<{
   const pipeline = groups.open.reduce((a, r) => a + totalOf(r.q), 0);
   return (
     <div className="space-y-5">
-      <PageHead title="ใบเสนอราคา" sub={`กำลังเสนอ ${groups.open.length} ใบ · มูลค่ารวม ${baht(pipeline)} · ลูกค้ายืนยันแล้วเปิดออเดอร์ได้ในคลิกเดียว`} />
-      <details open={!!showNew || !!err} className="card p-5">
-        <summary className="cursor-pointer font-bold text-navy-700">+ สร้างใบเสนอราคาใหม่</summary>
-        <form action={createQuoteAction} className="mt-4 grid gap-3 md:grid-cols-3">
-          <div><label className="label" htmlFor="name">ชื่อผู้ติดต่อ *</label><input id="name" name="name" required maxLength={120} className="input" aria-invalid={!!err} /></div>
+      <PageHead title="ใบเสนอราคา" sub={`กำลังเสนอ ${groups.open.length} ใบ · มูลค่ารวม ${baht(pipeline)} · ลูกค้ายืนยันแล้วเปิดออเดอร์ได้ในคลิกเดียว`}>
+        <a href="#new-quote" className="btn-primary">+ ใบเสนอราคาใหม่</a>
+      </PageHead>
+      <Disclosure id="new-quote" defaultOpen={!!showNew} className="card scroll-mt-4 p-5"
+        summary={<summary className="flex min-h-11 cursor-pointer items-center font-bold text-navy-700">+ สร้างใบเสนอราคาใหม่</summary>}>
+        <ActionForm action={createQuoteAction} className="mt-4 grid gap-3 md:grid-cols-3">
+          <div><label className="label" htmlFor="name">ชื่อผู้ติดต่อ *</label><input id="name" name="name" required maxLength={120} className="input" /></div>
           <div><label className="label" htmlFor="company">บริษัท / หน่วยงาน</label><input id="company" name="company" maxLength={160} className="input" /></div>
           <div><label className="label" htmlFor="phone">เบอร์โทร</label><input id="phone" name="phone" type="tel" maxLength={30} className="input" /></div>
           <div><label className="label" htmlFor="email">อีเมล</label><input id="email" name="email" type="email" maxLength={120} className="input" /></div>
           <div><label className="label" htmlFor="province">จังหวัด</label><input id="province" name="province" maxLength={60} className="input" /></div>
           <div><label className="label" htmlFor="topic">เรื่อง</label><input id="topic" name="topic" maxLength={200} placeholder="เช่น ถังบำบัด 20 ใบ โครงการหมู่บ้าน" className="input" /></div>
-          <div className="md:col-span-3"><button className="btn-primary">สร้าง แล้วใส่รายการสินค้า →</button></div>
-        </form>
-      </details>
+          <div className="md:col-span-3"><SubmitButton pendingText="กำลังสร้าง…">สร้าง แล้วใส่รายการสินค้า →</SubmitButton></div>
+        </ActionForm>
+      </Disclosure>
       <Tabs current={f} items={[
         { key: 'open', label: 'กำลังเสนอ', href: '/quotes?f=open', count: groups.open.length },
         { key: 'won', label: 'ปิดการขาย', href: '/quotes?f=won', count: groups.won.length },

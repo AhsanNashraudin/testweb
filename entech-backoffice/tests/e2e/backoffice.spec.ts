@@ -17,6 +17,17 @@ test('ออเดอร์จากใบเสนอราคาเดิน�
   page.on('dialog', (d) => d.accept());
   await login(page);
 
+  // ข้อมูลบริษัทยังว่าง → ระบบเตือนว่าออกใบกำกับภาษีไม่ได้ · กรอกให้ครบก่อน
+  await page.goto('/settings');
+  await expect(page.getByText('ยังออก/พิมพ์ใบกำกับภาษีไม่ได้')).toBeVisible();
+  await page.getByLabel('เลขประจำตัวผู้เสียภาษี').fill('123');
+  await page.getByLabel('ที่อยู่').fill('99 หมู่ 1 ต.ทดสอบ อ.เมือง จ.ชลบุรี 20000');
+  await page.getByRole('button', { name: 'บันทึก', exact: true }).click();
+  await expect(page.getByLabel('เลขประจำตัวผู้เสียภาษี')).toHaveAttribute('aria-invalid', 'true'); // ฝั่งเซิร์ฟเวอร์ไม่รับ 3 หลัก และชี้ช่องที่ผิด
+  await page.getByLabel('เลขประจำตัวผู้เสียภาษี').fill('0105500000001');
+  await page.getByRole('button', { name: 'บันทึก', exact: true }).click();
+  await ok(page, 'บันทึกแล้ว');
+
   // เซลล์สร้างใบเสนอราคา → เพิ่มสินค้า ส่วนลดเกินสิทธิ์ แล้วเปิดออเดอร์
   await page.goto('/quotes?new=1');
   await page.getByLabel('ชื่อผู้ติดต่อ *').fill('คุณวิภา');
@@ -29,6 +40,7 @@ test('ออเดอร์จากใบเสนอราคาเดิน�
   await page.getByRole('button', { name: '+ เพิ่ม' }).click();
   await expect(page.getByText('ขาด 2 · ต้องผลิต')).toBeVisible();
   await page.getByLabel('ส่วนลด (%)').fill('8');
+  await page.getByLabel('เครดิต (วัน)').fill('30');
   await page.getByRole('button', { name: /บันทึกข้อมูลลูกค้า/ }).click();
   await expect(page.getByText('ส่วนลดเกินสิทธิ์')).toBeVisible();
   await page.getByRole('button', { name: 'ลูกค้ายืนยัน · เปิดออเดอร์' }).click();
@@ -59,7 +71,10 @@ test('ออเดอร์จากใบเสนอราคาเดิน�
   await card.getByRole('button', { name: /เริ่มผลิต/ }).click();
   await expect(card.getByRole('link', { name: 'บันทึกผลผลิต' })).toBeVisible();
   await card.getByRole('link', { name: 'บันทึกผลผลิต' }).click();
-  await page.getByRole('button', { name: 'เพิ่มผ่านทดสอบรั่วซึม (ใบ)' }).click();
+  // เริ่มที่ 0 (กันบันทึกเกิน) · กด + 2 ครั้ง แล้วปุ่ม + ต้องปิดเมื่อถึงจำนวนที่เหลือ
+  const plus = page.getByRole('button', { name: /เพิ่มผ่านทดสอบรั่วซึม/ });
+  await plus.click(); await plus.click();
+  await expect(plus).toBeDisabled();
   await page.getByRole('button', { name: 'บันทึก 2 ใบ' }).click();
   await expect(page.getByTestId('mo-finished')).toContainText('ผลิตครบ 2 ใบ');
   await page.goto('/production');

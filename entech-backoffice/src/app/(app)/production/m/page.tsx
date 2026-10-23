@@ -5,6 +5,8 @@ import { requireUser } from '@/lib/admin';
 import { Badge, thDate } from '@/components/bo';
 import { MO_TH } from '@/lib/status';
 import { OutputForm } from './output-form';
+import { ActionForm, SubmitButton } from '@/components/action-form';
+import { moAction } from '../../actions';
 
 export const metadata = { title: 'บันทึกผลผลิต' };
 
@@ -15,7 +17,7 @@ export default async function Worker({ searchParams }: { searchParams: Promise<{
   const now = Math.floor(Date.now() / 1000);
   const rows = await db.select({ mo: s.productionOrders, sku: s.items.sku, pName: s.items.productName, vName: s.items.variantName })
     .from(s.productionOrders).innerJoin(s.items, eq(s.items.id, s.productionOrders.itemId))
-    .where(inArray(s.productionOrders.status, ['in_progress', 'queued', 'qc'])).orderBy(s.productionOrders.dueAt);
+    .where(inArray(s.productionOrders.status, ['in_progress', 'queued', 'qc', 'waiting'])).orderBy(s.productionOrders.dueAt);
   const cur = rows.find((r) => r.mo.id === sel && r.mo.status === 'in_progress');
   const finished = rows.find((r) => r.mo.id === sel && r.mo.status === 'qc');
 
@@ -49,12 +51,16 @@ export default async function Worker({ searchParams }: { searchParams: Promise<{
             <p className="mt-1 text-lg font-bold">{pName} {vName}</p>
             <p className="text-sm text-muted">{sku} · ผลิตแล้ว {mo.goodQty} / {mo.qty} ใบ{mo.line && ` · ${mo.line}`}</p>
             <div className="mt-3 h-2 rounded-full bg-slate-100"><div className={`h-2 rounded-full ${late ? 'bg-sale' : 'bg-navy-700'}`} style={{ width: `${Math.max(2, (mo.goodQty / mo.qty) * 100)}%` }} /></div>
-            <p className="mt-2 text-sm font-semibold text-navy-700">{mo.status === 'in_progress' ? 'แตะเพื่อบันทึกผลผลิต →' : mo.status === 'qc' ? 'รอทดสอบรั่วซึม' : 'อยู่ในคิว เริ่มได้ที่หน้าโรงงาน'}</p>
+            {mo.status === 'in_progress' && <p className="mt-2 text-sm font-semibold text-navy-700">แตะเพื่อบันทึกผลผลิต →</p>}
           </>
         );
         return mo.status === 'in_progress'
           ? <Link key={mo.id} href={`/production/m?mo=${mo.id}`} className={`block rounded-2xl border-2 bg-white p-5 ${late ? 'border-sale' : 'border-slate-200 hover:border-navy-700'}`}>{body}</Link>
-          : <div key={mo.id} className="rounded-2xl border border-slate-200 bg-white p-5 opacity-80">{body}</div>;
+          : <div key={mo.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">{body}
+            {(mo.status === 'queued' || mo.status === 'qc') && <ActionForm action={moAction} className="mt-3">
+              <input type="hidden" name="id" value={mo.id} /><input type="hidden" name="op" value={mo.status === 'queued' ? 'start' : 'qc'} />
+              <SubmitButton className="btn-primary w-full">{mo.status === 'queued' ? 'เริ่มผลิต' : 'ผ่านทดสอบรั่วซึม · เข้าคลัง'}</SubmitButton></ActionForm>}
+            {mo.status === 'waiting' && <p className="mt-2 text-sm text-warning">รอวัตถุดิบ — ตรวจที่หน้าโรงงาน</p>}</div>;
       })}
       {!rows.length && <p className="card p-6 text-center text-muted">ยังไม่มีงานผลิต · <Link href="/production" className="text-navy-700 underline">ไปหน้าโรงงาน</Link></p>}
     </div>
