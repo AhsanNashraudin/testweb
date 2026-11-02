@@ -14,6 +14,8 @@ const OLD: [string, string][] = [
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // build สำหรับโฮสต์ทั่วไป (Hostatom/Plesk): npm run build:hostatom → รวมทุกอย่างที่ต้องใช้รันไว้ในโฟลเดอร์เดียว · Vercel ไม่ใช้ค่านี้
+  ...(process.env.BUILD_STANDALONE ? { output: 'standalone' as const } : {}),
   // อัปโหลดรูปจากหลังบ้าน (ย่อในเบราว์เซอร์แล้ว ปกติไม่กี่ร้อย KB)
   experimental: { serverActions: { bodySizeLimit: '4mb' } },
   async redirects() {

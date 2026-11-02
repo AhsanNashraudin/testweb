@@ -1,6 +1,6 @@
 /* ข้อมูลตั้งต้น: สินค้าจาก scripts/catalog.ts (ราคาจาก Price List), โซนค่าส่งจากชีต Delivery Fee */
 import bcrypt from 'bcryptjs';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db, schema as s } from '../src/db';
 import { CATS, PRODUCTS, type P } from './catalog';
 import { ARTICLES } from './articles';
@@ -54,13 +54,20 @@ const TEXT_FIXES: [string, string][] = [
 ];
 const SETTING_FIXES: [string, string, string][] = [
   ['contact', '02-813-0971-5', '02-813-0971-4'],
+  ['contact', '10/6 หมู่ 9 ซ.สุขาภิบาล 2 ถ.พุทธมณฑลสาย 4 ต.อ้อมน้อย อ.กระทุ่มแบน จ.สมุทรสาคร 74130', '10/6 หมู่ที่ 9 ซอยสุขาภิบาล 2 ถนนพุทธมณฑลสาย 4 ตำบลอ้อมน้อย อำเภอกระทุ่มแบน จังหวัดสมุทรสาคร 74130'],
   ['home', '"image":"/images/products/cat_tank.jpg"', '"image":"/images/hero-studio.webp","imageFit":"contain"'],
   ['home', '"image":"/images/hero-products.webp"', '"image":"/images/hero-studio.webp"'],
-  ['home', '"image":"/images/hero-studio.webp","imageFit":"contain"', '"image":"/images/hero-scene-v3.webp","imageFit":"scene"'],
-  ['home', '"image":"/images/hero-scene.webp"', '"image":"/images/hero-scene-v3.webp"'],
-  ['home', '"image":"/images/hero-scene-v2.webp"', '"image":"/images/hero-scene-v3.webp"'],
+  ['home', '"image":"/images/hero-studio.webp","imageFit":"contain"', '"image":"/images/hero-scene-v4.webp","imageFit":"scene"'],
+  ['home', '"image":"/images/hero-scene.webp"', '"image":"/images/hero-scene-v4.webp"'],
+  ['home', '"image":"/images/hero-scene-v2.webp"', '"image":"/images/hero-scene-v4.webp"'],
+  ['home', '"image":"/images/hero-scene-v3.webp"', '"image":"/images/hero-scene-v4.webp"'],
   ['home', '"imageAlt":"ถังเก็บน้ำ ENTECH ที่โรงงาน"', '"imageAlt":"ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC"'],
   ['home', 'ถังเก็บน้ำรับประกันสูงสุด 20 ปี พร้อมทีมงานดูแลหลังการขาย', 'รับประกัน 20 ปี ภายใต้เงื่อนไขการรับประกันของบริษัท ตามข้อกำหนดและเงื่อนไขการรับประกัน'],
+  // เอาข้อมูล มอก. ออกจากข้อความหลักของเว็บ (ลูกค้าขอ ต.ค. 2569 — รอยืนยันใบรับรองรายรุ่น)
+  ['contact', 'ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสีย มาตรฐาน มอก. ตั้งแต่ปี 2537', 'ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสีย ตั้งแต่ปี 2537'],
+  ['home', 'คุณภาพมาตรฐาน มอก.', 'คุณภาพจากผู้ผลิตโดยตรง'],
+  ['home', '"title":"สินค้ามาตรฐาน มอก.","desc":"ผลิตภัณฑ์ได้รับมาตรฐาน มอก. 1379-2551, 816-2538 และ 435-2548"', '"title":"คุณภาพมาตรฐาน ISO 9001","desc":"ผลิตภายใต้ระบบบริหารคุณภาพ ISO 9001 ตรวจสอบคุณภาพทุกขั้นตอนการผลิต"'],
+  ['home', '"title":"มาตรฐาน มอก.","desc":"ถัง PE และไฟเบอร์กลาสได้รับมาตรฐานผลิตภัณฑ์อุตสาหกรรม"', '"title":"มาตรฐาน ISO 9001","desc":"ระบบบริหารคุณภาพที่ได้รับการรับรอง ควบคุมคุณภาพทุกขั้นตอน"'],
 ];
 async function fixSettings() {
   for (const [key, o, n] of SETTING_FIXES) {
@@ -93,6 +100,9 @@ async function main() {
     const catId = Object.fromEntries(existing.map((c) => [c.slug, c.id]));
     const have = new Set((await db.select({ slug: s.products.slug }).from(s.products)).map((p) => p.slug));
     const added = await insertProducts(PRODUCTS.filter((p) => !have.has(p.slug)), catId);
+    // สินค้าที่ลูกค้าให้เอาออกจากเว็บ (ซ่อน ไม่ลบ — คำสั่งซื้อ/ใบเสนอราคาเก่าที่อ้างถึงยังเปิดได้)
+    const RETIRED = ['fiberglass-water-tank', 'fiberglass-grease-trap'];
+    await db.update(s.products).set({ isActive: false }).where(inArray(s.products.slug, RETIRED));
     // รูปหมวด: เปลี่ยนเป็นรูปรวมสินค้า cat-<หมวด>.jpg (เฉพาะหมวดที่ยังใช้รูปตั้งต้นเดิม — รูปที่แอดมินเปลี่ยนเองไม่ถูกทับ)
     const OLD_CAT_IMG: Record<string, string> = {
       'water-tanks': 'tank-grand-stone', 'septic-tanks': 'septic-polytec-t', 'grease-traps': 'grease-set',

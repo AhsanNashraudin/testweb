@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // รันกับฐานข้อมูลทดสอบแยก (data/test.db) ที่ล้างและ seed ใหม่ทุกครั้ง
-const env = { DATABASE_URL: 'file:./data/test.db', SITE_URL: 'http://localhost:3100', SESSION_SECRET: 'test-secret-test-secret-test-secret-123', ADMIN_EMAIL: 'admin@entech.local', ADMIN_PASSWORD: 'Entech@2026', STOCK_API_KEY: 'test-stock-key-0123456789abcdef0123456789' };
+const env = { DATABASE_URL: 'file:./data/test.db', SITE_URL: 'http://localhost:3100', SESSION_SECRET: 'test-secret-test-secret-test-secret-123', ADMIN_EMAIL: 'admin@entech.local', ADMIN_PASSWORD: 'Entech@2026', STOCK_API_KEY: 'test-stock-key-0123456789abcdef0123456789', BACKUP_DIR: 'data/test-backups', BACKUP_FIRST_DELAY_MS: '1500' };
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -17,7 +17,7 @@ export default defineConfig({
     { name: 'admin', use: { ...devices['Desktop Chrome'], launchOptions: { executablePath: process.env.PW_CHROMIUM } }, testMatch: /admin\.spec/, dependencies: ['desktop', 'mobile'] },
   ],
   webServer: {
-    command: 'node -e "require(\'fs\').rmSync(\'data/test.db\',{force:true})" && npx drizzle-kit push --force && npx tsx scripts/seed.ts && npx tsx tests/fixtures/setup-db.ts && npx next start -p 3100',
+    command: 'node -e "for (const f of [\'data/test.db\', \'data/test-backups\']) require(\'fs\').rmSync(f,{force:true,recursive:true})" && npx drizzle-kit push --force && npx tsx scripts/seed.ts && npx tsx tests/fixtures/setup-db.ts && npx next start -p 3100',
     url: 'http://localhost:3100',
     env,
     timeout: 120_000,

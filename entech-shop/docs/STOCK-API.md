@@ -1,6 +1,6 @@
 # ENTECH Website — Stock / ERP Integration API (v1)
 
-เอกสารสำหรับทีมพัฒนาระบบสต็อก (outsource) ที่เชื่อมกับเว็บไซต์ entech-products.com
+เอกสารสำหรับทีมพัฒนาระบบสต็อก (outsource) ที่เชื่อมกับเว็บไซต์ entechproducts.co.th
 
 - **Base URL:** `https://<โดเมนเว็บ>/api/v1` (ช่วงทดสอบ: `https://testweb-azure-chi.vercel.app/api/v1`)
 - **รูปแบบ:** JSON (UTF-8) · เวลาเป็น ISO-8601 (UTC) · จำนวนเงินเป็น **บาท จำนวนเต็ม**

@@ -18,7 +18,10 @@ export default async function Dashboard() {
   const kpi = [['ยอดขายวันนี้', baht(today.sum)], ['คำสั่งซื้อวันนี้', String(today.n)], ['รอชำระเงิน', String(pending.n)], ['ใบเสนอราคาใหม่', String(newQuotes.n)]];
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">ภาพรวม</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">ภาพรวม</h1>
+        <Link href="/admin/backup" className="btn-outline text-sm" data-testid="backup-link">🛡 สำรองข้อมูล</Link>
+      </div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{kpi.map(([l, v]) => <div key={l} className="card p-5"><p className="text-sm text-muted">{l}</p><p className="text-2xl font-bold" data-testid={`kpi-${l}`}>{v}</p></div>)}</div>
       <div className="grid gap-6 lg:grid-cols-[1fr_360px] [&>*]:min-w-0">
         <section className="card p-5">

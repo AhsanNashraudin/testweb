@@ -8,13 +8,14 @@ import type { IconName } from '@/components/icons';
 
 export const DEFAULT_CONTACT = {
   company: 'บริษัท เอนเทค โพรดักส์ จำกัด', regNo: '0105537038071',
-  phone: '02-813-0971-4', mobile: '063-206-1000', email: 'Entechproducts1@gmail.com',
+  phone: '02-813-0971-4', mobile: '063-206-1000', mobile2: '093-636-3978', email: 'Entechproducts1@gmail.com',
   line: '@entechproducts', lineUrl: 'https://line.me/R/ti/p/@entechproducts',
   facebook: 'https://www.facebook.com/Entechproducts2026', facebookName: '@Entechproducts2026',
   hours: 'จันทร์–เสาร์ 08:00–16:30',
-  address: '10/6 หมู่ 9 ซ.สุขาภิบาล 2 ถ.พุทธมณฑลสาย 4 ต.อ้อมน้อย อ.กระทุ่มแบน จ.สมุทรสาคร 74130',
+  address: '10/6 หมู่ที่ 9 ซอยสุขาภิบาล 2 ถนนพุทธมณฑลสาย 4 ตำบลอ้อมน้อย อำเภอกระทุ่มแบน จังหวัดสมุทรสาคร 74130',
+  addressEn: '10/6 Moo 9, Soi Sukhaphiban 2, Phutthamonthon Sai 4 Road, Om Noi Subdistrict, Krathum Baen District, Samut Sakhon 74130, Thailand',
   mapUrl: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('บริษัท เอนเทค โพรดักส์ จำกัด อ้อมน้อย กระทุ่มแบน สมุทรสาคร'),
-  topbar: 'ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสีย มาตรฐาน มอก. ตั้งแต่ปี 2537',
+  topbar: 'ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสีย ตั้งแต่ปี 2537',
 };
 export type Contact = typeof DEFAULT_CONTACT;
 
@@ -27,18 +28,17 @@ export const SECTION_LABEL: Record<SectionKey, string> = {
 export const DEFAULT_HOME = {
   hero: {
     badge: '',
-    title: 'ถังเก็บน้ำ & ถังบำบัดน้ำเสีย\nคุณภาพมาตรฐาน มอก.',
+    title: 'ถังเก็บน้ำ & ถังบำบัดน้ำเสีย\nคุณภาพจากผู้ผลิตโดยตรง',
     lead: 'ผู้ผลิตโดยตรงสำหรับบ้าน ร้านอาหาร และโครงการ ที่มีประสบการณ์มากกว่า 30 ปี',
     sub: 'สั่งออนไลน์ได้ทันที ค่าส่งคำนวณอัตโนมัติ ส่งทั่วประเทศ หรือรับเองที่โรงงาน',
     btn1Label: 'เลือกซื้อสินค้า', btn1Href: '/products',
     btn2Label: 'ขอใบเสนอราคา', btn2Href: '/services#quote',
-    image: '/images/hero-scene-v3.webp', imageAlt: 'ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC ตั้งบนลานหน้าอาคาร',
+    image: '/images/hero-scene-v4.webp', imageAlt: 'ถังเก็บน้ำและถังบำบัดน้ำเสีย ENTECH และ POLYTEC ตั้งบนลานหน้าอาคาร',
     imageSide: 'right' as 'right' | 'left',
     // scene = ภาพฉากเต็ม ขอบซ้ายค่อย ๆ จางกลืนกับพื้นหลัง (ภาพจากลูกค้า ครอป 4:3 + เพิ่มความคม)
     // contain = รูปสินค้าพื้นใส วางลอยบนพื้นหลัง (scripts/make-hero.py) · cover = ภาพถ่ายเต็มกรอบมุมมน
     imageFit: 'scene' as 'scene' | 'contain' | 'cover',
-    showCerts: true, // โลโก้มาตรฐาน ISO 9001 และ มอก. ใต้ข้อความรอง
-    certImage: '/images/cert-tis-1568.jpg', // รูปที่ขึ้นเมื่อกดการ์ด มอก. (เว้นว่าง = กดไม่ได้)
+    showCerts: true, // การ์ด ISO 9001 + มอก. ใต้ข้อความรอง
   },
   // ลำดับในรายการ = ลำดับบนหน้าเว็บ · title = หัวข้อที่แสดง (แถบปิดท้ายใช้หัวข้อใน cta)
   sections: ([
@@ -50,7 +50,7 @@ export const DEFAULT_HOME = {
     desc: 'ผู้ผลิตและจัดจำหน่ายถังเก็บน้ำ ถังบำบัดน้ำเสีย ถังดักไขมัน และประตูไฟเบอร์กลาส พร้อมบริการออกแบบและติดตั้งระบบบำบัดน้ำเสีย ภายใต้แบรนด์ ENTECH และ POLYTEC',
     items: [
       { icon: 'truck', title: 'จัดส่งสินค้าทั่วประเทศ', desc: 'กรุงเทพฯ ปริมณฑล และต่างจังหวัด ค่าส่งคำนวณอัตโนมัติตามจังหวัด หรือรับเองที่โรงงาน' },
-      { icon: 'award', title: 'สินค้ามาตรฐาน มอก.', desc: 'ผลิตภัณฑ์ได้รับมาตรฐาน มอก. 1379-2551, 816-2538 และ 435-2548' },
+      { icon: 'award', title: 'คุณภาพมาตรฐาน ISO 9001', desc: 'ผลิตภายใต้ระบบบริหารคุณภาพ ISO 9001 ตรวจสอบคุณภาพทุกขั้นตอนการผลิต' },
       { icon: 'shield', title: 'รับประกันคุณภาพ', desc: 'รับประกัน 20 ปี ภายใต้เงื่อนไขการรับประกันของบริษัท ตามข้อกำหนดและเงื่อนไขการรับประกัน' },
       { icon: 'headset', title: 'บริการให้คำปรึกษาฟรี', desc: 'ช่วยเลือกขนาดและรุ่นที่เหมาะกับบ้าน ร้านอาหาร อาคาร และโรงงาน' },
       { icon: 'doc', title: 'ขอใบเสนอราคาฟรี', desc: 'ส่งรายละเอียดงานมา ทีมงานตอบกลับพร้อมใบเสนอราคา ไม่มีค่าใช้จ่าย' },
@@ -66,7 +66,7 @@ export const DEFAULT_HOME = {
   ],
   why: [
     { title: 'ผู้ผลิตโดยตรง', desc: 'ออกแบบและผลิตเองตั้งแต่ปี 2537 ราคาจากโรงงาน' },
-    { title: 'มาตรฐาน มอก.', desc: 'ถัง PE และไฟเบอร์กลาสได้รับมาตรฐานผลิตภัณฑ์อุตสาหกรรม' },
+    { title: 'มาตรฐาน ISO 9001', desc: 'ระบบบริหารคุณภาพที่ได้รับการรับรอง ควบคุมคุณภาพทุกขั้นตอน' },
     { title: 'รับประกันสูงสุด 20 ปี', desc: 'ถังเก็บน้ำรุ่น GRAND STONE และ NATURAL DESIGN' },
     { title: 'ทีมวิศวกร', desc: 'ออกแบบและก่อสร้างระบบบำบัดน้ำเสียสำหรับชุมชนและโรงงาน' },
   ],
@@ -87,7 +87,9 @@ async function readJson(key: string): Promise<Record<string, unknown>> {
 export const getContact = cache(async () => {
   const c = { ...DEFAULT_CONTACT, ...(await readJson('contact')) } as Contact;
   const digits = (v: string) => v.split(/[,/]/)[0].replace(/\D/g, '').slice(0, 10);
-  return { ...c, tel: { main: `tel:${digits(c.phone)}`, mobile: `tel:${digits(c.mobile)}` } };
+  // ลำดับที่แสดงบนเว็บ: มือถือหลัก → เบอร์สำนักงาน → มือถือสำรอง
+  const phones = [c.mobile, c.phone, c.mobile2].filter(Boolean).map((label) => ({ label, href: `tel:${digits(label)}` }));
+  return { ...c, phones, tel: { main: `tel:${digits(c.phone)}`, mobile: `tel:${digits(c.mobile)}` } };
 });
 
 export const getHome = cache(async (): Promise<Home> => {

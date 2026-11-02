@@ -34,7 +34,7 @@ export default async function Home() {
     '@context': 'https://schema.org', '@type': 'Organization', name: contact.company, alternateName: 'ENTECH Products',
     url: SITE_URL, logo: `${SITE_URL}/images/logo.png`, telephone: contact.phone, email: contact.email, foundingDate: '1994',
     contactPoint: [{ '@type': 'ContactPoint', telephone: contact.mobile, contactType: 'customer service', areaServed: 'TH', availableLanguage: 'th' }],
-    address: { '@type': 'PostalAddress', streetAddress: contact.address, addressCountry: 'TH' },
+    address: { '@type': 'PostalAddress', streetAddress: contact.address, postalCode: contact.address.match(/\b\d{5}\b/)?.[0], addressCountry: 'TH' },
   };
   const hero = h.hero;
 
@@ -140,7 +140,7 @@ export default async function Home() {
             {hero.badge && <span className="inline-block rounded-full bg-cyan-700 px-3 py-1 text-sm font-semibold text-white">{hero.badge}</span>}
             <h1 className="whitespace-pre-line text-3xl font-bold leading-tight text-navy-900 md:text-4xl">{hero.title}</h1>
             {hero.lead && <p className="text-lg text-ink">{hero.lead}</p>}
-            {hero.showCerts && <HeroCerts certImage={hero.certImage} />}
+            {hero.showCerts && <HeroCerts />}
             {hero.sub && <p className="text-muted">{hero.sub}</p>}
             <div className="flex flex-wrap gap-3">
               {hero.btn1Label && hero.btn1Href && <Link href={hero.btn1Href} className="btn-primary px-6">{hero.btn1Label}</Link>}

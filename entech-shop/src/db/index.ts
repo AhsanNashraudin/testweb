@@ -9,6 +9,8 @@ const url = dbUrl();
 const g = globalThis as unknown as { __entechDb?: ReturnType<typeof createClient> };
 const client = g.__entechDb ?? createClient({ url, authToken: dbToken() });
 if (process.env.NODE_ENV !== 'production') g.__entechDb = client;
+// ฐานข้อมูลเป็นไฟล์บนโฮสต์ (Hostatom): โหมด WAL ให้อ่าน-เขียนพร้อมกันได้ และรอแทนการ error เมื่อมีคนเขียนอยู่
+if (url.startsWith('file:')) client.executeMultiple('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;').catch(() => {});
 
 export const db = drizzle(client, { schema });
-export { schema };
+export { schema, client };

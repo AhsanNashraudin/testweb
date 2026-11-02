@@ -4,7 +4,8 @@ import { and, eq, ne, sql } from 'drizzle-orm';
 import { db, schema as s } from '@/db';
 import { requireAdmin, int, num, str } from '@/lib/admin';
 import { isProvince } from '@/lib/provinces';
-import { QUOTE_STATUS_TH } from '@/lib/status';
+import { ALL_QUOTE_TOPICS, QUOTE_STATUS_TH } from '@/lib/status';
+import { LEVELS, getNotify, isLineId, onReassign, pushLine, saveNotify, type Level, type Member } from '@/lib/notify';
 import { updateOrder } from '@/lib/orders';
 import { ICON, type IconName } from '@/components/icons';
 import { DEFAULT_CONTACT, DEFAULT_HOME, SECTION_KEYS, safeHref, safeImage, type Home } from '@/lib/content';
@@ -136,11 +137,71 @@ export async function savePickup(_prev: Result, form: FormData): Promise<Result>
 }
 
 // ---------- ใบเสนอราคา ----------
-export async function updateQuoteStatus(_prev: Result, form: FormData): Promise<Result> {
+export async function updateQuote(_prev: Result, form: FormData): Promise<Result> {
   return run(async () => {
+    const id = int(form.get('id'), 1);
     const status = str(form.get('status'));
     if (!Object.hasOwn(QUOTE_STATUS_TH, status)) throw new Error('สถานะไม่ถูกต้อง');
-    await db.update(s.quotes).set({ status: status as 'new' }).where(eq(s.quotes.id, int(form.get('id'), 1)));
+    const assignee = str(form.get('assignee'), 40);
+    const cfg = await getNotify();
+    if (assignee && !cfg.team.some((m) => m.id === assignee)) throw new Error('ไม่พบผู้ดูแลคนนี้');
+    const [cur] = await db.select({ assignee: s.quotes.assignee }).from(s.quotes).where(eq(s.quotes.id, id));
+    if (!cur) throw new Error('ไม่พบรายการ');
+    await db.update(s.quotes).set({ status: status as 'new', assignee, note: str(form.get('note'), 2000), updatedAt: Date.now() }).where(eq(s.quotes.id, id));
+    if (assignee && assignee !== cur.assignee) {
+      await onReassign(id);
+      return 'บันทึกแล้ว — แจ้ง LINE ผู้ดูแลคนใหม่แล้ว';
+    }
+  });
+}
+
+// ---------- ทีมขาย & แจ้งเตือน ----------
+export async function saveNotifySettings(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const cfg = await getNotify();
+    cfg.remindHours = int(form.get('remindHours'), 1, 72);
+    cfg.escalateHours = Math.max(cfg.remindHours + 1, int(form.get('escalateHours'), 2, 240));
+    cfg.orders = form.get('orders') === 'on';
+    await saveNotify(cfg);
+  });
+}
+
+export async function saveMember(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const cfg = await getNotify();
+    const id = str(form.get('id'), 40) || `m${Date.now().toString(36)}`;
+    const name = str(form.get('name'), 80);
+    const lineId = str(form.get('lineId'), 40);
+    const level = str(form.get('level')) as Level;
+    if (name.length < 2) throw new Error('กรุณากรอกชื่อ');
+    if (lineId && !isLineId(lineId)) throw new Error('LINE ID ไม่ถูกต้อง — ต้องขึ้นต้นด้วย U (คน) หรือ C (กลุ่ม) ตามด้วย 32 ตัวอักษร ดูวิธีหาด้านบน');
+    if (!Object.hasOwn(LEVELS, level)) throw new Error('กรุณาเลือกระดับ');
+    const topics = form.getAll('topics').map((t) => str(t, 100)).filter((t) => ALL_QUOTE_TOPICS.includes(t));
+    const m: Member = { id, name, lineId, level, topics: level === 'sales' ? topics : [], active: form.get('active') === 'on' };
+    const i = cfg.team.findIndex((x) => x.id === id);
+    if (i >= 0) cfg.team[i] = m; else cfg.team.push(m);
+    await saveNotify(cfg);
+  }, 'บันทึกแล้ว');
+}
+
+export async function deleteMember(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const id = str(form.get('id'), 40);
+    const cfg = await getNotify();
+    cfg.team = cfg.team.filter((m) => m.id !== id);
+    await saveNotify(cfg);
+    await db.update(s.quotes).set({ assignee: '' }).where(and(eq(s.quotes.assignee, id), ne(s.quotes.status, 'won')));
+  }, 'ลบแล้ว');
+}
+
+export async function testMember(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const m = (await getNotify()).team.find((x) => x.id === str(form.get('id'), 40));
+    if (!m) throw new Error('ไม่พบรายชื่อ');
+    const r = await pushLine([m.lineId], `✅ ทดสอบแจ้งเตือนจากเว็บ ENTECH
+ถึง: ${m.name} (${LEVELS[m.level]})`);
+    if (!r.sent) throw new Error(`ส่งไม่สำเร็จ: ${r.err}`);
+    return `ส่งข้อความทดสอบถึง ${m.name} แล้ว — เช็กใน LINE`;
   });
 }
 
@@ -233,7 +294,6 @@ export async function saveHome(_prev: Result, form: FormData): Promise<Result> {
       image, imageAlt: t(h.imageAlt, 120) || 'ENTECH', imageSide: h.imageSide === 'left' ? 'left' as const : 'right' as const,
       imageFit: (['scene', 'contain', 'cover'] as const).find((f) => f === h.imageFit) ?? 'cover',
       showCerts: h.showCerts !== false,
-      certImage: safeImage(t(h.certImage)),
     };
     if (!hero.title) throw new Error('กรุณาใส่หัวข้อหลักของแบนเนอร์');
     const sections = (Array.isArray(raw.sections) ? raw.sections : [])
@@ -272,4 +332,36 @@ export async function saveCategory(_prev: Result, form: FormData): Promise<Resul
     if (!image) throw new Error('กรุณาเลือกรูปหมวด');
     await db.update(s.categories).set({ name, description: str(form.get('description'), 400), image }).where(eq(s.categories.id, id));
   }, 'บันทึกหมวดแล้ว — เมนูและหน้าแรกเปลี่ยนตามทันที');
+}
+
+// ---------- สำรองข้อมูล ----------
+export async function backupNow(): Promise<Result> {
+  return run(async () => {
+    const { createBackup } = await import('@/lib/backup');
+    const b = await createBackup('manual');
+    return `สำรองข้อมูลแล้ว: ${b.name}`;
+  });
+}
+
+export async function restoreBackup(_prev: Result, form: FormData): Promise<Result> {
+  return run(async () => {
+    const { restoreFrom } = await import('@/lib/backup');
+    const safety = await restoreFrom(str(form.get('name'), 120));
+    return `กู้คืนเรียบร้อย — ข้อมูลก่อนกู้คืนถูกเก็บไว้ที่ ${safety.name} (ย้อนกลับได้)`;
+  });
+}
+
+// ---------- บัญชีแอดมิน ----------
+export async function changePassword(_prev: Result, form: FormData): Promise<Result> {
+  const me = await requireAdmin();
+  return run(async () => {
+    const bcrypt = (await import('bcryptjs')).default;
+    const cur = String(form.get('current') ?? ''), next = String(form.get('next') ?? ''), again = String(form.get('again') ?? '');
+    const [a] = await db.select().from(s.admins).where(eq(s.admins.id, me.id));
+    if (!a || !(await bcrypt.compare(cur, a.passwordHash))) throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง');
+    if (next.length < 12) throw new Error('รหัสผ่านใหม่ต้องยาวอย่างน้อย 12 ตัวอักษร');
+    if (next !== again) throw new Error('รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน');
+    if (next === cur) throw new Error('รหัสผ่านใหม่ต้องไม่ซ้ำรหัสเดิม');
+    await db.update(s.admins).set({ passwordHash: await bcrypt.hash(next, 10) }).where(eq(s.admins.id, me.id));
+  }, 'เปลี่ยนรหัสผ่านแล้ว — ใช้รหัสใหม่ในการเข้าสู่ระบบครั้งถัดไป');
 }

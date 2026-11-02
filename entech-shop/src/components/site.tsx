@@ -22,7 +22,7 @@ export async function Header() {
     <header className="relative z-40 bg-white shadow-sm md:sticky md:top-0">
       <div className="bg-navy-900 text-xs text-white">
         <div className="container-x flex flex-wrap items-center justify-between gap-x-3 py-1.5 md:py-2">
-          <span>☎ <a href={TEL.main} className="inline-block py-1 underline-offset-2 hover:underline">{CONTACT.phone}</a>, <a href={TEL.mobile} className="inline-block py-1 underline-offset-2 hover:underline">{CONTACT.mobile}</a><span className="hidden md:inline"> · {CONTACT.hours}</span></span>
+          <span>☎ {CONTACT.phones.map((p, i) => <span key={p.href}>{i > 0 && ', '}<a href={p.href} className="inline-block py-1 underline-offset-2 hover:underline">{p.label}</a></span>)}<span className="hidden md:inline"> · {CONTACT.hours}</span></span>
           {CONTACT.topbar && <span className="hidden text-cyan-100 md:inline">{CONTACT.topbar}</span>}
           <Link href="/order/lookup" className="inline-block whitespace-nowrap py-1 underline md:hidden">ตรวจสอบคำสั่งซื้อ</Link>
         </div>
@@ -42,7 +42,6 @@ export async function Header() {
 
 export async function Footer() {
   const CONTACT = await getContact();
-  const TEL = CONTACT.tel;
   return (
     <footer className="mt-16 bg-navy-900 pb-20 text-sm text-navy-100 md:pb-0">
       <div className="container-x grid gap-8 break-words py-12 md:grid-cols-3 [&>*]:min-w-0">
@@ -53,8 +52,8 @@ export async function Footer() {
         <div>
           <p className="mb-3 font-semibold text-white">ติดต่อเรา</p>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 [&_a]:hover:text-white [&_a]:hover:underline [&_dt]:font-semibold [&_dt]:text-white">
-            <dt>ที่อยู่:</dt><dd>{CONTACT.address}</dd>
-            <dt>โทร:</dt><dd><a href={TEL.main}>{CONTACT.phone}</a>{CONTACT.mobile && <>, <a href={TEL.mobile}>{CONTACT.mobile}</a></>}</dd>
+            <dt>ที่อยู่:</dt><dd>{CONTACT.address}{CONTACT.addressEn && <span lang="en" className="mt-0.5 block text-xs opacity-80">{CONTACT.addressEn}</span>}</dd>
+            <dt>โทร:</dt><dd>{CONTACT.phones.map((p, i) => <span key={p.href}>{i > 0 && ', '}<a href={p.href}>{p.label}</a></span>)}</dd>
             {CONTACT.email && <><dt>อีเมล:</dt><dd><a href={`mailto:${CONTACT.email}`} className="break-all">{CONTACT.email}</a></dd></>}
             <dt>LINE:</dt><dd><a href={CONTACT.lineUrl} target="_blank" rel="noopener">{CONTACT.line}</a>{CONTACT.hours && <> · {CONTACT.hours}</>}</dd>
             {CONTACT.facebook && <><dt>Facebook:</dt><dd><a href={CONTACT.facebook} target="_blank" rel="noopener">{CONTACT.facebookName || 'Facebook'}</a></dd></>}

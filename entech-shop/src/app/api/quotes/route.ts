@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { db, schema as s } from '@/db';
 import { readJson, apiError } from '@/lib/api';
+import { onNewQuote } from '@/lib/notify';
 
 const quoteSchema = z.object({
   name: z.string().trim().min(2, 'กรุณากรอกชื่อ').max(100),
@@ -26,7 +27,8 @@ export async function POST(req: Request) {
     const { website: _hp, source, ...data } = r.data;
     void _hp;
     if (source) data.detail = `[${source}]\n${data.detail}`.trim();
-    await db.insert(s.quotes).values(data);
+    const [q] = await db.insert(s.quotes).values(data).returning({ id: s.quotes.id });
+    after(() => onNewQuote(q.id).catch((e) => console.error('✗ แจ้งเตือนฟอร์ม:', e))); // ส่ง LINE หลังตอบลูกค้าแล้ว (ไม่ทำให้ช้า)
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (e) {
     return apiError(e);

@@ -1,8 +1,12 @@
 node_modules
 .next
 data/*.db*
+data/backups
 .env
 .env.local
 test-results
 playwright-report
 *.tsbuildinfo
+
+# ไฟล์ zip สำหรับอัปโฮสต์
+/deploy

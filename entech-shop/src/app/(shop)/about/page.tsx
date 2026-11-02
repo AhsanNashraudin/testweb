@@ -6,7 +6,7 @@ import { Icon, type IconName } from '@/components/icons';
 
 export const metadata: Metadata = {
   title: 'เกี่ยวกับเรา',
-  description: 'บริษัท เอนเทค โพรดักส์ จำกัด ก่อตั้งปี 2537 ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสีย PE, FRP แบรนด์ ENTECH และ POLYTEC มาตรฐาน มอก. พร้อมบริการออกแบบระบบบำบัดน้ำเสีย',
+  description: 'บริษัท เอนเทค โพรดักส์ จำกัด ก่อตั้งปี 2537 ผู้ผลิตถังเก็บน้ำและถังบำบัดน้ำเสีย PE, FRP แบรนด์ ENTECH และ POLYTEC พร้อมบริการออกแบบระบบบำบัดน้ำเสีย',
   alternates: { canonical: '/about' },
 };
 
@@ -42,7 +42,7 @@ function H2({ id, icon, children, light }: { id: string; icon: IconName; childre
 
 export default async function About() {
   const CONTACT = await getContact();
-  const STATS: [IconName, string, string][] = [['clock', 'ก่อตั้ง', '29 มีนาคม 2537'], ['star', 'ประสบการณ์', 'มากกว่า 30 ปี'], ['briefcase', 'ทุนจดทะเบียน', '47,000,000 บาท'], ['award', 'มาตรฐาน', 'มอก. 1379-2551 · 816-2538 · 435-2548']];
+  const STATS: [IconName, string, string][] = [['clock', 'ก่อตั้ง', '29 มีนาคม 2537'], ['star', 'ประสบการณ์', 'มากกว่า 30 ปี'], ['briefcase', 'ทุนจดทะเบียน', '47,000,000 บาท'], ['award', 'มาตรฐาน', 'ISO 9001 ระบบบริหารคุณภาพ']];
   return (
     <div className="pb-6">
       {/* ส่วนหัว: พื้นอ่อนไล่สี */}
@@ -51,7 +51,7 @@ export default async function About() {
           <div className="space-y-4">
             <span className="inline-flex items-center gap-2 rounded-full bg-cyan-100 px-3 py-1 text-sm font-semibold text-cyan-700"><Icon name="factory" className="h-4 w-4" /> ผู้ผลิตโดยตรง ตั้งแต่ปี 2537</span>
             <h1 className="text-3xl font-bold text-navy-900 md:text-4xl">{CONTACT.company}</h1>
-            <p className="text-ink">ผู้ออกแบบ ผลิต และจัดจำหน่ายถังบำบัดน้ำเสียและถังเก็บน้ำ PE และไฟเบอร์กลาส (FRP) ภายใต้แบรนด์ ENTECH และ POLYTEC ผลิตภัณฑ์ได้รับมาตรฐานผลิตภัณฑ์อุตสาหกรรม มอก. 1379-2551, มอก. 816-2538 และ มอก. 435-2548</p>
+            <p className="text-ink">ผู้ออกแบบ ผลิต และจัดจำหน่ายถังบำบัดน้ำเสียและถังเก็บน้ำ PE และไฟเบอร์กลาส (FRP) ภายใต้แบรนด์ ENTECH และ POLYTEC ผลิตภายใต้ระบบบริหารคุณภาพ ISO 9001</p>
             <p className="text-ink">นอกจากสินค้าสำเร็จรูป ทีมวิศวกรของเรารับออกแบบและก่อสร้างระบบบำบัดน้ำเสียสำหรับชุมชนและโรงงาน รวมถึงงานไฟเบอร์กลาสตามสั่ง</p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Link href="/products" className="btn-primary">ดูสินค้าทั้งหมด</Link>
@@ -136,7 +136,7 @@ export default async function About() {
 
         <section aria-labelledby="h-office" className="grid gap-4 md:grid-cols-3">
           <h2 id="h-office" className="sr-only">ติดต่อบริษัท</h2>
-          {([['pin', 'ที่ตั้งโรงงานและสำนักงาน', CONTACT.address], ['phone', 'โทร', `${CONTACT.phone}, ${CONTACT.mobile}`], ['clock', 'เวลาทำการ', `${CONTACT.hours} · เลขทะเบียนนิติบุคคล ${CONTACT.regNo}`]] as [IconName, string, string][]).map(([icon, k, v]) => (
+          {([['pin', 'ที่ตั้งโรงงานและสำนักงาน', CONTACT.address], ['phone', 'โทร', CONTACT.phones.map((p) => p.label).join(', ')], ['clock', 'เวลาทำการ', `${CONTACT.hours} · เลขทะเบียนนิติบุคคล ${CONTACT.regNo}`]] as [IconName, string, string][]).map(([icon, k, v]) => (
             <div key={k} className="flex gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-cyan-600 to-navy-700 text-white"><Icon name={icon} className="h-5 w-5" /></span>
               <div className="min-w-0 text-sm"><p className="font-bold text-navy-900">{k}:</p><p className="mt-0.5 text-muted">{v}</p></div>

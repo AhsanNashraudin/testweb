@@ -23,7 +23,7 @@ export async function LegalPage({ title, updated, intro, sections }: { title: st
       <section className="card mt-10 p-5 text-sm">
         <p className="font-bold">{CONTACT.company}</p>
         <p className="mt-1 text-muted">{CONTACT.address}</p>
-        <p className="mt-1">โทร: <a href={CONTACT.tel.main} className="text-navy-700 underline">{CONTACT.phone}</a>, <a href={CONTACT.tel.mobile} className="text-navy-700 underline">{CONTACT.mobile}</a> · อีเมล: <a href={`mailto:${CONTACT.email}`} className="break-all text-navy-700 underline">{CONTACT.email}</a> · LINE: <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="text-navy-700 underline">{CONTACT.line}</a></p>
+        <p className="mt-1">โทร: {CONTACT.phones.map((p, i) => <span key={p.href}>{i > 0 && ', '}<a href={p.href} className="text-navy-700 underline">{p.label}</a></span>)} · อีเมล: <a href={`mailto:${CONTACT.email}`} className="break-all text-navy-700 underline">{CONTACT.email}</a> · LINE: <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="text-navy-700 underline">{CONTACT.line}</a></p>
       </section>
     </article>
   );

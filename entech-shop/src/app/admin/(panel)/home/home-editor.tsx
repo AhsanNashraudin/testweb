@@ -120,11 +120,7 @@ export function HomeEditor({ initial, defaults, links }: { initial: Home; defaul
           <Text label="ป้ายเล็กด้านบน" value={h.hero.badge} onChange={(badge) => hero({ badge })} max={60} hint="เว้นว่าง = ไม่แสดงป้าย" />
           <Text label="หัวข้อหลัก *" rows={2} value={h.hero.title} onChange={(title) => hero({ title })} max={120} hint="กด Enter เพื่อขึ้นบรรทัดใหม่" />
           <Text label="ข้อความรอง" rows={2} value={h.hero.lead} onChange={(lead) => hero({ lead })} max={300} />
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={h.hero.showCerts} onChange={(e) => hero({ showCerts: e.target.checked })} className="h-5 w-5" /> แสดงโลโก้มาตรฐาน ISO 9001 และ มอก. ใต้ข้อความรอง</label>
-          {h.hero.showCerts && (
-            <div className="max-w-xs"><ImagePicker label="รูปใบอนุญาต มอก. (ขึ้นเมื่อกดการ์ด มอก.)" value={h.hero.certImage} onChange={(certImage) => hero({ certImage })}
-              aspect="aspect-[3/4]" hint="เว้นว่าง = การ์ด มอก. กดไม่ได้" /></div>
-          )}
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={h.hero.showCerts} onChange={(e) => hero({ showCerts: e.target.checked })} className="h-5 w-5" /> แสดงการ์ด ISO 9001 และ มอก. ใต้ข้อความรอง</label>
           <Text label="ข้อความเพิ่มเติม (ตัวเล็ก)" rows={2} value={h.hero.sub} onChange={(sub) => hero({ sub })} max={300} hint="เว้นว่าง = ไม่แสดง" />
           <div className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
             <Text label="ปุ่มที่ 1 (ปุ่มหลัก) — ข้อความ" value={h.hero.btn1Label} onChange={(btn1Label) => hero({ btn1Label })} max={40} />

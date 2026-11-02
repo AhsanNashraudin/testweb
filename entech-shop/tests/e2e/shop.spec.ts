@@ -141,22 +141,21 @@ test('ขอใบเสนอราคา', async ({ page }) => {
   await expect(page.locator('body')).toContainText(/ขอบคุณ|ได้รับ/);
 });
 
-test('หน้าแรก: รูปปกสินค้าจริง + กดการ์ด มอก. เปิดใบอนุญาตในป๊อปอัป (Esc ปิด) · ISO กดไม่ได้', async ({ page }) => {
+test('หน้าแรก: รูปปก + การ์ด ISO 9001 (กดแล้ว popup UKAS) + มอก. เท่านั้น · หัวเว็บ 3 เบอร์ เรียง 063 → 02 → 093', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByTestId('hero-image').locator('img')).toHaveAttribute('src', /hero-scene/);
-  await expect(page.locator('header')).toContainText('02-813-0971-4');
+  await expect(page.locator('header').first()).toContainText('063-206-1000, 02-813-0971-4, 093-636-3978');
   const certs = page.getByTestId('hero-certs');
-  await expect(certs.getByRole('button')).toHaveCount(1);
+  await expect(certs).toContainText('ISO 9001');
+  await expect(certs.locator('img[src*="cert-iso9001"]')).toBeVisible();
   const dlg = page.getByTestId('cert-dialog');
   await expect(dlg).toBeHidden();
-  await page.getByTestId('cert-open').click();
-  await expect(dlg).toBeVisible();
-  await expect(dlg.locator('img')).toHaveAttribute('src', /cert-tis-1568/);
+  await certs.getByTestId('cert-open').click(); // กดการ์ด ISO → popup รูป UKAS
+  await expect(dlg.locator('img[src*="cert-ukas"]')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dlg).toBeHidden();
-  await page.getByTestId('cert-open').click();
-  await dlg.getByRole('button', { name: 'ปิด' }).click();
-  await expect(dlg).toBeHidden();
+  await expect(certs).toContainText('มาตรฐาน มอก.');
+  await expect(certs.locator('li')).toHaveCount(2);
 });
 
 test('เมนูสินค้า: รายชื่อหมวดแนวตั้ง ชี้แล้วแสดงรูปรวมสินค้าของหมวด · หน้าแรกมีโลโก้มาตรฐาน', async ({ page }) => {
@@ -192,4 +191,12 @@ test('หน้าแรก: ส่วนจุดเด่นบริการ
   await expect(feat.getByRole('heading', { level: 2 })).toContainText('ถังเก็บน้ำ');
   await expect(feat.getByRole('heading', { level: 3 })).toHaveCount(6);
   await expect(page.locator('[data-section=why] dl')).toContainText('30+');
+});
+
+test('ถังไฟเบอร์กลาส: เหลือเฉพาะถังบำบัดน้ำเสีย (ถังเก็บน้ำ/ถังดักไขมันไฟเบอร์กลาสเอาออกตามที่ลูกค้าขอ)', async ({ page }) => {
+  await page.goto('/products/fiberglass-water-tanks');
+  await expect(page.getByText('ถังบำบัดน้ำเสียไฟเบอร์กลาส (สั่งผลิตตามขนาด)').first()).toBeVisible();
+  await expect(page.getByText('ถังเก็บน้ำไฟเบอร์กลาส (สั่งผลิตตามขนาด)')).toHaveCount(0);
+  await expect(page.getByText('ถังดักไขมันไฟเบอร์กลาส (สั่งผลิตตามขนาด)')).toHaveCount(0);
+  expect((await page.goto('/product/fiberglass-grease-trap'))?.status()).toBe(404);
 });

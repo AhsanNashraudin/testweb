@@ -1,3 +1,4 @@
+import { QUOTE_TOPICS } from '@/lib/status';
 import type { Metadata } from 'next';
 import { QuoteForm } from '@/components/quote-form';
 import { Icon, type IconName } from '@/components/icons';
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 const SERVICES: [IconName, string, string][] = [
   ['treatment', 'ออกแบบและก่อสร้างระบบบำบัดน้ำเสียชุมชนและอุตสาหกรรม', 'สำรวจหน้างาน คำนวณปริมาณน้ำเสีย ออกแบบ และก่อสร้างให้ผ่านมาตรฐานน้ำทิ้ง'],
   ['capsule', 'ถังบำบัดน้ำเสียไฟเบอร์กลาส', 'ผลิตตามขนาดสำหรับอาคาร โรงงาน และโครงการ ทนการกัดกร่อน อายุใช้งานยาว'],
-  ['tank', 'ถังเก็บน้ำไฟเบอร์กลาสและพลาสติก', 'ถัง PE และ FRP ตั้งแต่บ้านพักอาศัยถึงงานขนาดใหญ่ ได้มาตรฐาน มอก.'],
+  ['tank', 'ถังเก็บน้ำไฟเบอร์กลาสและพลาสติก', 'ถัง PE และ FRP ตั้งแต่บ้านพักอาศัยถึงงานขนาดใหญ่ ผลิตภายใต้ระบบ ISO 9001'],
   ['flask', 'ถังเก็บสารเคมีและระบบท่ออุตสาหกรรม', 'เลือกเรซินให้เหมาะกับสารเคมีแต่ละชนิด พร้อมงานเดินระบบท่อ'],
   ['wind', 'ถังดักก๊าซและสารเคมีควบคุมมลพิษ', 'อุปกรณ์ไฟเบอร์กลาสสำหรับระบบบำบัดอากาศและควบคุมมลพิษ'],
   ['roller', 'เคลือบไฟเบอร์กลาสผิวคอนกรีตและโลหะ', 'กันรั่วซึม กันสนิม ยืดอายุบ่อ ถัง และโครงสร้างเดิม'],
@@ -67,7 +68,7 @@ export default async function Services({ searchParams }: { searchParams: Promise
       </section>
       <h2 id="quote" className="mb-4 scroll-mt-40 text-2xl font-bold text-navy-900">ขอใบเสนอราคา / ปรึกษาโครงการ</h2>
       <QuoteForm source={product ? `หน้าสินค้า: ${product}` : 'หน้าบริการ'} defaultDetail={product ? `สนใจสินค้า: ${product}\nจำนวน: ` : ''}
-        topics={product ? ['ขอราคาสินค้า (สั่งจำนวนมาก/โครงการ)', 'ระบบบำบัดน้ำเสีย', 'อื่นๆ'] : ['ระบบบำบัดน้ำเสีย', 'ถังเก็บน้ำ (สั่งจำนวนมาก)', 'ถังเก็บสารเคมี / งานอุตสาหกรรม', 'งานเคลือบไฟเบอร์กลาส', 'อื่นๆ']} />
+        topics={product ? QUOTE_TOPICS.product : QUOTE_TOPICS.services} />
     </div>
   );
 }

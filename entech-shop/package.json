@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "db:push": "drizzle-kit push --force",
     "db:seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+    "build:hostatom": "node scripts/build-hostatom.mjs",
     "vercel-build": "node scripts/vercel-check.mjs && drizzle-kit push --force && tsx scripts/seed.ts && next build",
     "db:reset": "node -e \"require('fs').rmSync('data/entech.db',{force:true})\" && npm run db:push && npm run db:seed"
   },

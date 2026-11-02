@@ -153,6 +153,10 @@ export const quotes = sqliteTable('quotes', {
   province: text('province').notNull().default(''),
   detail: text('detail').notNull().default(''),
   status: text('status', { enum: ['new', 'in_progress', 'sent', 'won', 'lost'] }).notNull().default('new'),
+  assignee: text('assignee').notNull().default(''), // id ผู้รับผิดชอบ (ทีมขายในหน้า "ทีมขาย & แจ้งเตือน")
+  note: text('note').notNull().default(''), // บันทึกภายใน
+  remindLevel: integer('remind_level').notNull().default(0), // 0 ยังไม่เตือน · 1 เตือนผู้ดูแล+หัวหน้าแล้ว · 2 แจ้งผู้บริหารแล้ว
+  updatedAt: integer('updated_at').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(now()),
 });
 

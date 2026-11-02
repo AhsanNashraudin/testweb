@@ -4,10 +4,11 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: 'ENTECH | ถังเก็บน้ำ ถังบำบัดน้ำเสีย ผู้ผลิตมาตรฐาน มอก.', template: '%s | ENTECH' },
+  title: { default: 'ENTECH | ถังเก็บน้ำ ถังบำบัดน้ำเสีย ผู้ผลิตโดยตรง', template: '%s | ENTECH' },
   description: DEFAULT_DESC,
   openGraph: OG,
   twitter: { card: 'summary_large_image' },
+  ...(process.env.NOINDEX === '1' ? { robots: { index: false, follow: false } } : {}),
 };
 export const viewport: Viewport = { themeColor: '#16304f' };
 

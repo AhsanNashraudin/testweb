@@ -67,7 +67,7 @@ export default async function ProductPage({ params }: Props) {
             variants={variants.map(({ id, name, price, compareAtPrice, stock, bulkPrice, bulkMinQty }) => ({ id, name, price, compareAtPrice, stock, bulkPrice, bulkMinQty }))} />
           <ul className="space-y-1 rounded-2xl border border-slate-200 p-4 text-sm">
             <li>🚚 ค่าส่งคำนวณอัตโนมัติตามจังหวัดในขั้นตอนชำระเงิน หรือรับเองที่โรงงานฟรี</li>
-            <li>🏅 ผู้ผลิตโดยตรงตั้งแต่ปี 2537 · ผลิตภัณฑ์ได้รับมาตรฐาน มอก.</li>
+            <li>🏅 ผู้ผลิตโดยตรงตั้งแต่ปี 2537 · ระบบบริหารคุณภาพ ISO 9001</li>
             <li>💬 สั่งจำนวนมาก/ต้องการราคาโครงการ: <Link href={`/services?product=${encodeURIComponent(p.name)}#quote`} className="inline-block py-1 font-semibold text-navy-700 underline">ขอใบเสนอราคาสินค้านี้</Link> หรือ LINE <a href={CONTACT.lineUrl} target="_blank" rel="noopener" className="inline-block py-1 font-semibold text-navy-700 underline">{CONTACT.line}</a></li>
           </ul>
         </div>
